@@ -1,18 +1,24 @@
-const port = 5000;
+const port = 3000;
 
 import express from "express";
 import routes from "./routes";
 import session from "express-session";
 import redisSession from "connect-redis";
-import ioredis from "ioredis";
+import ioredis, {Redis} from "ioredis";
 
 const app = express();
 
 const Store = redisSession(session);
-const client = new ioredis();
 
-app.use(express.json());
-app.use(routes);
+declare global {
+  namespace NodeJS {
+    interface Global {
+      GlobalRedisClient: Redis;
+    }
+  }
+}
+
+global.GlobalRedisClient = new ioredis();
 
 app.use(
   session({
@@ -22,9 +28,13 @@ app.use(
     secret: "TEMPORARY_SECRET",
     name: "LTSID", //Legal Torrent Session ID
     resave: false, //avoid saving if nothing was modified
-    store: new Store({ client: client }),
+    store: new Store({ client: global.GlobalRedisClient }),
+    saveUninitialized: false,
   })
 );
+
+app.use(express.json());
+app.use(routes);
 
 app.listen(port, () => {
   console.log(`Launched server at: http://localhost:${port}`);

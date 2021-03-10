@@ -9,6 +9,8 @@ interface Translation {
   unknown: string;
 }
 
+//TODO: check this and make sure adding the key to the beginning of every string is okay.
+//I think it needs to be replaced with label if it exists since the key won't be translated.
 export class Language {
   private lang: Translation;
 
