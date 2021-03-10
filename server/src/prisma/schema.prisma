@@ -9,3 +9,52 @@ datasource db {
 generator client {
   provider = "prisma-client-js"
 }
+
+model User {
+  id Int @id @default(autoincrement())
+  created DateTime @default(now())
+  email String @unique
+  role Role @default(USER)
+  gender Gender @default(Unspecified)
+  banned Boolean @default(false)
+  sessions Session[]
+  favorites Favorite[]
+  torrents Torrent[]
+}
+
+model Torrent {
+  id String @id @default(uuid())
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+  favorites Favorite[]
+}
+
+model Favorite {
+  id String @id @default(uuid())
+  torrent Torrent @relation(fields: [torrentId], references: [id])
+  torrentId String
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+}
+
+model Session {
+  id String @id @default(uuid())
+  ip String
+  device String
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+}
+
+enum Role {
+  USER
+  UPLOADER
+  STAFF
+  ADMIN
+}
+
+enum Gender {
+  Male
+  Female
+  Other
+  Unspecified
+}
