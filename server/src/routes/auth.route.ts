@@ -66,7 +66,7 @@ authRouter.post("/auth/register", async (req, res) => {
       id,
     };
 
-    await redis.addUserSession(user.id, req.sessionID);
+    await redis.addUserSession(id, req.sessionID);
 
     res.status(200).json({
       status: "success",
@@ -124,7 +124,7 @@ authRouter.post("/auth/login", async (req, res) => {
       id,
     };
 
-    await redis.addUserSession(user.id, req.sessionID);
+    await redis.addUserSession(id, req.sessionID);
 
     res.status(200).json({
       status: "success",
