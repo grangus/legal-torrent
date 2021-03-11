@@ -1,3 +1,5 @@
+//Endpoints for login and registration.
+//TODO: implement sentry.io or some other error logging library
 import { Router } from "express";
 import * as argon2 from "argon2";
 import joi from "joi";
@@ -9,7 +11,7 @@ const authRouter = Router();
 const prisma = new PrismaClient();
 const redis = new Redis();
 
-//TODO: implement sentry.io or some other error logging library
+//This endpoint does nothing. I just have it here for testing things. Ignore it.
 authRouter.get("/auth/meta", (req, res) => {
   res.json({
     status: "success",
@@ -59,11 +61,12 @@ authRouter.post("/auth/register", async (req, res) => {
       },
     });
 
-    let { email, id } = user;
+    let { email, id, role } = user;
 
     req.session.user = {
       email,
       id,
+      role,
     };
 
     await redis.addUserSession(id, req.sessionID);
@@ -117,11 +120,12 @@ authRouter.post("/auth/login", async (req, res) => {
         error: language.getTranslation("invalid_email_or_password"),
       });
 
-    let { email, id } = user;
+    let { email, id, role } = user;
 
     req.session.user = {
       email,
       id,
+      role,
     };
 
     await redis.addUserSession(id, req.sessionID);
