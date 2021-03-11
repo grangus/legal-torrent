@@ -9,7 +9,7 @@ declare module "express-session" {
 }
 
 interface User {
-  uid: number;
+  id: number;
   email: string;
 }
 

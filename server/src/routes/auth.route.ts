@@ -31,14 +31,14 @@ authRouter.post("/auth/register", async (req, res) => {
       })
       .validate(req.body);
 
-    if (error)
+    if (error) {
+      let { type, context } = error.details[0];
+
       return res.status(400).json({
         status: "error",
-        error: language.getJoiTranslation(
-          error.details[0].type,
-          error.details[0].context
-        ),
+        error: language.getJoiTranslation(type, context),
       });
+    }
 
     let userExists = await prisma.user.findFirst({
       where: { email: req.body.email },
@@ -59,9 +59,11 @@ authRouter.post("/auth/register", async (req, res) => {
       },
     });
 
+    let { email, id } = user;
+
     req.session.user = {
-      email: user.email,
-      uid: user.id,
+      email,
+      id,
     };
 
     await redis.addUserSession(user.id, req.sessionID);
@@ -88,14 +90,14 @@ authRouter.post("/auth/login", async (req, res) => {
       })
       .validate(req.body);
 
-    if (error)
+    if (error) {
+      let { type, context } = error.details[0];
+
       return res.status(400).json({
         status: "error",
-        error: language.getJoiTranslation(
-          error.details[0].type,
-          error.details[0].context
-        ),
+        error: language.getJoiTranslation(type, context),
       });
+    }
 
     let user = await prisma.user.findFirst({
       where: { email: req.body.email },
@@ -115,9 +117,11 @@ authRouter.post("/auth/login", async (req, res) => {
         error: language.getTranslation("invalid_email_or_password"),
       });
 
+    let { email, id } = user;
+
     req.session.user = {
-      email: user.email,
-      uid: user.id,
+      email,
+      id,
     };
 
     await redis.addUserSession(user.id, req.sessionID);
