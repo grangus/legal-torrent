@@ -11,39 +11,81 @@ generator client {
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  created DateTime @default(now())
-  email String @unique
-  password String
-  role Role @default(USER)
-  gender Gender @default(Unspecified)
-  banned Boolean @default(false)
-  sessions Session[]
-  favorites Favorite[]
-  torrents Torrent[]
+  id            Int               @id @default(autoincrement())
+  created       DateTime          @default(now())
+  email         String            @unique
+  password      String
+  role          Role              @default(USER)
+  gender        Gender            @default(Unspecified)
+  banned        Boolean           @default(false)
+  banreason     String            @default("You have been banned!")
+  sessions      Session[]
+  favorites     Favorite[]
+  torrents      Torrent[]
+  notifications Notification[]
+  downloads     Download[]
+  inbox         InboundMessage[]
+  outbox        OutboundMessage[]
 }
 
 model Torrent {
-  id String @id @default(uuid())
-  user User @relation(fields: [userId], references: [id])
-  userId Int
+  id        String     @id @default(uuid())
+  user      User       @relation(fields: [userId], references: [id])
+  userId    Int
   favorites Favorite[]
+  downloads Download[]
 }
 
 model Favorite {
-  id String @id @default(uuid())
-  torrent Torrent @relation(fields: [torrentId], references: [id])
+  id        String  @id @default(uuid())
+  torrent   Torrent @relation(fields: [torrentId], references: [id])
   torrentId String
-  user User @relation(fields: [userId], references: [id])
-  userId Int
+  user      User    @relation(fields: [userId], references: [id])
+  userId    Int
 }
 
 model Session {
-  id String @id @default(uuid())
-  ip String
+  id     String @id @default(uuid())
+  ip     String
   device String
-  user User @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
   userId Int
+}
+
+model Notification {
+  id      String  @id @default(uuid())
+  title   String
+  message String
+  read    Boolean @default(false)
+  user    User    @relation(fields: [userId], references: [id])
+  userId  Int
+}
+
+model Download {
+  id        String   @id @default(uuid())
+  date      DateTime @default(now())
+  torrent   Torrent  @relation(fields: [torrentId], references: [id])
+  torrentId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+}
+
+model InboundMessage {
+  id       String @id @default(uuid())
+  title    String
+  message  String
+  user     User   @relation(fields: [userId], references: [id]) //receiver
+  userId   Int
+  senderId Int
+}
+
+model OutboundMessage {
+  id         String @id @default(uuid())
+  title      String
+  message    String
+  user       User   @relation(fields: [userId], references: [id]) //sender
+  userId     Int
+  receiverId Int
 }
 
 enum Role {

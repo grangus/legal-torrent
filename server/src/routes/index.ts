@@ -8,6 +8,8 @@ declare module "express-session" {
   interface SessionData {
     user: User;
     language?: string;
+    ip: string;
+    device: Device;
   }
 }
 
@@ -15,6 +17,18 @@ interface User {
   id: number;
   email: string;
   role: string;
+}
+
+interface Device {
+  userAgent: string;
+  browser: {
+    name: string;
+    version: string;
+  };
+  os: {
+    name: string;
+    version: string;
+  };
 }
 
 const routes = Router();

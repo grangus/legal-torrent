@@ -5,15 +5,14 @@ import * as argon2 from "argon2";
 import joi from "joi";
 import { Language } from "../misc/translations";
 import { PrismaClient } from "@prisma/client";
-import { Redis } from "../misc/redis";
+import { RedisMethods } from "../misc/redis";
 
 const authRouter = Router();
 const prisma = new PrismaClient();
-const redis = new Redis();
+const redis = new RedisMethods();
 
-//This endpoint does nothing. I just have it here for testing things. Ignore it.
-authRouter.get("/auth/meta", (req, res) => {
-  res.json({
+authRouter.get("/auth/token", (req, res) => {
+  res.header({ "x-csrf-token": req.csrfToken() }).json({
     status: "success",
   });
 });
@@ -75,6 +74,7 @@ authRouter.post("/auth/register", async (req, res) => {
       status: "success",
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       status: "error",
       error: language.getTranslation("internal_error"),
@@ -120,7 +120,13 @@ authRouter.post("/auth/login", async (req, res) => {
         error: language.getTranslation("invalid_email_or_password"),
       });
 
-    let { email, id, role } = user;
+    let { email, id, role, banned, banreason } = user;
+
+    if (banned)
+      return res.status(403).json({
+        status: "error",
+        error: banreason,
+      });
 
     req.session.user = {
       email,
@@ -132,6 +138,92 @@ authRouter.post("/auth/login", async (req, res) => {
 
     res.status(200).json({
       status: "success",
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
+authRouter.post("/auth/logout", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  if (!req.session.user)
+    return res.status(403).json({
+      status: "error",
+      error: language.getTranslation("unauthorized"),
+    });
+
+  req.session.destroy((err) => {
+    if (err)
+      return res.status(500).json({
+        status: "error",
+        error: language.getTranslation("internal_error"),
+      });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        message: "Logged out successfully!",
+      },
+    });
+  });
+});
+
+authRouter.post("/auth/session/destroy/:sid", async (req, res) => {});
+
+authRouter.post("/auth/sessions/clear", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    await redis.removeAllUserSessions(req.session.user.id);
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        message: language.getTranslation("session_clear_success"),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
+authRouter.get("/auth/sessions", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    let sessions = (await redis.getAllUserSessions(req.session.user.id)).map(
+      (s) => {
+        return {
+          device: s.device,
+          user: s.user,
+        };
+      }
+    );
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        sessions,
+      },
     });
   } catch (error) {
     res.status(500).json({
