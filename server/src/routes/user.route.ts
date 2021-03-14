@@ -407,4 +407,96 @@ userRouter.post("/user/report", async (req, res) => {
   }
 });
 
+userRouter.post("/user/subscribe/toggle", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    const { error } = joi
+      .object({
+        id: joi.number().integer().required(),
+        toggle: joi.boolean().required(),
+      })
+      .validate(req.body);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    let subscribed = prisma.user.findFirst({
+      where: { subscriptions: { some: { id: req.body.id } } },
+    });
+
+    if (req.body.toggle && !subscribed) {
+      const updateSubscriptions = prisma.user.update({
+        where: { id: req.session.user.id },
+        data: {
+          subscriptions: { connect: { id: req.body.id } },
+        },
+      });
+
+      const updateSubscribers = prisma.user.update({
+        where: { id: req.body.id },
+        data: {
+          subscribers: { connect: { id: req.session.user.id } },
+        },
+      });
+
+      await prisma.$transaction([updateSubscriptions, updateSubscribers]);
+
+      return res.status(200).json({
+        status: "success",
+        data: {
+          message: language.getTranslation("subscribed_successfully"),
+        },
+      });
+    }
+
+    if (!req.body.toggle && subscribed) {
+      const updateSubscriptions = prisma.user.update({
+        where: { id: req.session.user.id },
+        data: {
+          subscriptions: { delete: { id: req.body.id } },
+        },
+      });
+
+      const updateSubscribers = prisma.user.update({
+        where: { id: req.body.id },
+        data: {
+          subscribers: { delete: { id: req.session.user.id } },
+        },
+      });
+
+      await prisma.$transaction([updateSubscriptions, updateSubscribers]);
+
+      return res.status(200).json({
+        status: "success",
+        data: {
+          message: language.getTranslation("unsubscribed_successfully"),
+        },
+      });
+    }
+
+    res.status(400).json({
+      status: "error",
+      error: language.getTranslation("unknown_error"),
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
 export default userRouter;

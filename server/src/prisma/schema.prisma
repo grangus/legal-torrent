@@ -28,7 +28,9 @@ model User {
   downloads     Download[]
   inbox         InboundMessage[]
   outbox        OutboundMessage[]
-  reports        Report[]
+  reports       Report[]
+  subscriptions User[]            @relation("SubscriptionsSubscribers")
+  subscribers   User[]            @relation("SubscriptionsSubscribers")
 }
 
 model Torrent {
