@@ -182,6 +182,12 @@ userRouter.post("/user/message/send", async (req, res) => {
   const language = new Language(req.session.language || "en");
 
   try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
     const { error } = joi
       .object({
         title: joi.string().required(),
@@ -198,12 +204,6 @@ userRouter.post("/user/message/send", async (req, res) => {
         error: language.getJoiTranslation(type, context),
       });
     }
-
-    if (!req.session.user)
-      return res.status(403).json({
-        status: "error",
-        error: language.getTranslation("unauthorized"),
-      });
 
     const createInboxMessage = prisma.user.update({
       where: { id: req.body.id },
@@ -237,6 +237,49 @@ userRouter.post("/user/message/send", async (req, res) => {
       status: "success",
       data: {
         message: language.getTranslation("message_sent_successfully"),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
+userRouter.get("/user/messages/:type", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    if (!["inbox", "outbox"].includes(req.params.type))
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("invalid_inbox_type"),
+      });
+
+    let messages =
+      req.params.type == "inbox"
+        ? await prisma.inboundMessage.findMany({
+            where: {
+              userId: req.session.user.id,
+            },
+          })
+        : await prisma.outboundMessage.findMany({
+            where: {
+              userId: req.session.user.id,
+            },
+          });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        messages,
       },
     });
   } catch (error) {
