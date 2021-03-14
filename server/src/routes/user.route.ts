@@ -7,6 +7,20 @@ import joi from "joi";
 const userRouter = Router();
 const prisma = new PrismaClient();
 
+userRouter.get("/user/lang/set/:code", async (req, res) => {
+  if (!["en", "es", "fr"].includes(req.params.code))
+    return res.status(400).json({
+      status: "error",
+      error: "Invalid language supplied!",
+    });
+
+  req.session.language = req.params.code;
+
+  res.status(200).json({
+    status: "success",
+  });
+});
+
 userRouter.get("/user/me", async (req, res) => {
   const language = new Language(req.session.language || "en");
 
@@ -164,6 +178,73 @@ userRouter.post("/user/favorites/toggle", async (req, res) => {
   }
 });
 
-userRouter.post("/user/message/send", async (req, res) => {});
+userRouter.post("/user/message/send", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    const { error } = joi
+      .object({
+        title: joi.string().required(),
+        message: joi.string().required(),
+        id: joi.number().integer().required(),
+      })
+      .validate(req.body);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    const createInboxMessage = prisma.user.update({
+      where: { id: req.body.id },
+      data: {
+        inbox: {
+          create: {
+            message: req.body.message,
+            title: req.body.title,
+            senderId: req.session.user.id,
+          },
+        },
+      },
+    });
+
+    const createOutboxMessage = prisma.user.update({
+      where: { id: req.session.user.id },
+      data: {
+        outbox: {
+          create: {
+            message: req.body.message,
+            title: req.body.title,
+            receiverId: req.body.id,
+          },
+        },
+      },
+    });
+
+    await prisma.$transaction([createInboxMessage, createOutboxMessage]);
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        message: language.getTranslation("message_sent_successfully"),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
 
 export default userRouter;
