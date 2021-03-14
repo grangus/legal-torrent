@@ -247,7 +247,7 @@ userRouter.post("/user/message/send", async (req, res) => {
   }
 });
 
-userRouter.get("/user/messages/:type", async (req, res) => {
+userRouter.get("/user/messages/:type/:page", async (req, res) => {
   const language = new Language(req.session.language || "en");
 
   try {
@@ -263,17 +263,23 @@ userRouter.get("/user/messages/:type", async (req, res) => {
         error: language.getTranslation("invalid_inbox_type"),
       });
 
+    let page = isNaN(parseInt(req.params.page)) ? 0 : parseInt(req.params.page);
+
     let messages =
       req.params.type == "inbox"
         ? await prisma.inboundMessage.findMany({
             where: {
               userId: req.session.user.id,
             },
+            skip: page <= 0 ? 0 : page * 10,
+            take: 10,
           })
         : await prisma.outboundMessage.findMany({
             where: {
               userId: req.session.user.id,
             },
+            skip: page <= 0 ? 0 : page * 10,
+            take: 10,
           });
 
     res.status(200).json({
