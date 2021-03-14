@@ -95,11 +95,75 @@ userRouter.get("/user/notifications/:type", async (req, res) => {
   }
 });
 
-//TODO: implement offset pagination for this
-userRouter.get("/user/favorites/list", async (req, res) => {});
+userRouter.get("/user/favorites/list/:page", async (req, res) => {
+  const language = new Language(req.session.language || "en");
 
-//TODO: implement offset pagination for this
-userRouter.get("/user/downloads/history", async (req, res) => {});
+  try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    let page = isNaN(parseInt(req.params.page)) ? 0 : parseInt(req.params.page);
+
+    let favorites = await prisma.favorite.findMany({
+      where: {
+        userId: req.session.user.id,
+      },
+      include: { torrent: true },
+      skip: page <= 0 ? 0 : page * 10,
+      take: 10,
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        favorites,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
+userRouter.get("/user/downloads/history/:page", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    let page = isNaN(parseInt(req.params.page)) ? 0 : parseInt(req.params.page);
+
+    let downloads = await prisma.download.findMany({
+      where: {
+        userId: req.session.user.id,
+      },
+      include: { torrent: true },
+      skip: page <= 0 ? 0 : page * 10,
+      take: 10,
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        downloads,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
 
 userRouter.post("/user/profile/update", async (req, res) => {});
 
