@@ -360,4 +360,51 @@ userRouter.get("/user/messages/:type/:page", async (req, res) => {
   }
 });
 
+userRouter.post("/user/report", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    const { error } = joi
+      .object({
+        reason: joi.string().required().max(500),
+        id: joi.number().integer().required(),
+      })
+      .validate(req.body);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    await prisma.report.create({
+      data: {
+        reason: req.body.reason,
+        user: { connect: { id: req.body.id } },
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        message: language.getTranslation("successfully_reported"),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
 export default userRouter;

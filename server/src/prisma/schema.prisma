@@ -28,6 +28,7 @@ model User {
   downloads     Download[]
   inbox         InboundMessage[]
   outbox        OutboundMessage[]
+  reports        Report[]
 }
 
 model Torrent {
@@ -88,6 +89,13 @@ model OutboundMessage {
   user       User   @relation(fields: [userId], references: [id]) //sender
   userId     Int
   receiverId Int
+}
+
+model Report {
+  id     String @id @default(uuid())
+  reason String
+  user   User   @relation(fields: [userId], references: [id])
+  userId Int
 }
 
 enum Role {
