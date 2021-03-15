@@ -107,8 +107,6 @@ torrentRouter.post("/torrent/rate", async (req, res) => {
   }
 });
 
-torrentRouter.post("/torrent/rate", async (req, res) => {});
-
 torrentRouter.post("/torrent/comment/post", async (req, res) => {});
 
 torrentRouter.post("/torrent/comment/edit", async (req, res) => {});
