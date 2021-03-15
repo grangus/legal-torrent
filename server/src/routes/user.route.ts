@@ -33,6 +33,7 @@ userRouter.get("/user/me", async (req, res) => {
 
     let user = await prisma.user.findFirst({
       where: { email: req.session.user.email },
+      include: { settings: true },
     });
 
     if (!user)
@@ -41,12 +42,12 @@ userRouter.get("/user/me", async (req, res) => {
         error: language.getTranslation("unauthorized"),
       });
 
-    let { email, banned, gender, id, role } = user;
+    let { email, banned, gender, id, role, settings } = user;
 
     res.status(200).json({
       status: "success",
       data: {
-        user: { email, banned, gender, id, role },
+        user: { email, banned, gender, id, role, settings },
       },
     });
   } catch (error) {
@@ -165,8 +166,30 @@ userRouter.get("/user/downloads/history/:page", async (req, res) => {
   }
 });
 
-userRouter.post("/user/profile/update", async (req, res) => {});
+//TODO: before continuing display name/unique username should be confirmed
+userRouter.post("/user/profile/update", async (req, res) => {
+  const language = new Language(req.session.language || "en");
 
+  try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    const { error } = joi
+      .object({
+        bio: joi.string().required(),
+      })
+      .validate(req.body);
+  } catch (error) {}
+});
+
+userRouter.post("/user/settings/update", async (req, res) => {});
+
+userRouter.post("/user/image/update", async (req, res) => {});
+
+//maybe this endpoint would be better off in torrents.route.ts
 userRouter.post("/user/favorites/toggle", async (req, res) => {
   const language = new Language(req.session.language || "en");
 
@@ -386,7 +409,7 @@ userRouter.post("/user/report", async (req, res) => {
       });
     }
 
-    await prisma.report.create({
+    await prisma.userReport.create({
       data: {
         reason: req.body.reason,
         user: { connect: { id: req.body.id } },

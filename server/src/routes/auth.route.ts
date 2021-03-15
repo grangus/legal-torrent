@@ -57,6 +57,7 @@ authRouter.post("/auth/register", async (req, res) => {
       data: {
         email: req.body.email,
         password: hashedPassword,
+        gender: req.body.gender,
         settings: { create: true },
       },
     });
@@ -121,12 +122,12 @@ authRouter.post("/auth/login", async (req, res) => {
         error: language.getTranslation("invalid_email_or_password"),
       });
 
-    let { email, id, role, banned, banreason } = user;
+    let { email, id, role, banned, ban_reason } = user;
 
     if (banned)
       return res.status(403).json({
         status: "error",
-        error: banreason,
+        error: ban_reason,
       });
 
     req.session.user = {

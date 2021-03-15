@@ -19,8 +19,9 @@ model User {
   location      String            @default("The Moon")
   role          Role              @default(USER)
   gender        Gender            @default(Unspecified)
+  reputation    Int               @default(0)
   banned        Boolean           @default(false)
-  banreason     String            @default("You have been banned!")
+  ban_reason    String            @default("You have been banned!")
   settings      UserSettings?
   sessions      Session[]
   favorites     Favorite[]
@@ -29,10 +30,11 @@ model User {
   downloads     Download[]
   inbox         InboundMessage[]
   outbox        OutboundMessage[]
-  reports       Report[]
+  reports       UserReport[]
   subscriptions User[]            @relation("SubscriptionsSubscribers")
   subscribers   User[]            @relation("SubscriptionsSubscribers")
   comments      Comment[]
+  ratings       Rating[]
 }
 
 model UserSettings {
@@ -45,13 +47,31 @@ model UserSettings {
 }
 
 model Torrent {
-  id        String        @id @default(uuid())
-  status    TorrentStatus @default(AVAILABLE)
-  user      User          @relation(fields: [userId], references: [id])
-  userId    Int
-  favorites Favorite[]
-  downloads Download[]
-  comments  Comment[]
+  id               String          @id @default(uuid())
+  status           TorrentStatus   @default(AVAILABLE)
+  positive_ratings Int
+  negative_ratings Int
+  user             User            @relation(fields: [userId], references: [id])
+  userId           Int
+  xbt_torrent      Xbt_Torrents?
+  favorites        Favorite[]
+  downloads        Download[]
+  comments         Comment[]
+  reports          TorrentReport[]
+  ratings          Rating[]
+}
+
+model Xbt_Torrents {
+  tid       Int     @id @default(autoincrement())
+  info_hash Bytes   @unique @db.Binary(20)
+  seeders   Int     @default(0)
+  leechers  Int     @default(0)
+  completed Int     @default(0)
+  flags     Int     @default(0)
+  mtime     Int     @default(0)
+  ctime     Int     @default(0)
+  torrent   Torrent @relation(fields: [torrentId], references: [id])
+  torrentId String
 }
 
 model Favorite {
@@ -106,11 +126,18 @@ model OutboundMessage {
   receiverId Int
 }
 
-model Report {
+model UserReport {
   id     String @id @default(uuid())
   reason String
   user   User   @relation(fields: [userId], references: [id])
   userId Int
+}
+
+model TorrentReport {
+  id        String  @id @default(uuid())
+  reason    String
+  torrent   Torrent @relation(fields: [torrentId], references: [id])
+  torrentId String
 }
 
 model Comment {
@@ -122,13 +149,28 @@ model Comment {
   torrent   Torrent   @relation(fields: [torrentId], references: [id])
   torrentId String
   replies   Comment[] @relation("CommentReply")
-  repliesTo Comment   @relation("CommentReply", fields: [commentId], references: [id])
-  commentId String
+  repliesTo Comment?  @relation("CommentReply", fields: [commentId], references: [id])
+  commentId String?
+}
+
+model Rating {
+  id        String     @id @default(uuid())
+  type      RatingType
+  user      User       @relation(fields: [userId], references: [id])
+  userId    Int
+  torrent   Torrent    @relation(fields: [torrentId], references: [id])
+  torrentId String
+}
+
+enum RatingType {
+  POSITIVE
+  NEGATIVE
 }
 
 enum TorrentStatus {
   BLOCKED
   AVAILABLE
+  UNCONFIRMED
 }
 
 enum Role {
