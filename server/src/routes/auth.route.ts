@@ -57,6 +57,7 @@ authRouter.post("/auth/register", async (req, res) => {
       data: {
         email: req.body.email,
         password: hashedPassword,
+        settings: { create: true },
       },
     });
 
@@ -172,7 +173,31 @@ authRouter.post("/auth/logout", async (req, res) => {
   });
 });
 
-authRouter.post("/auth/session/destroy/:sid", async (req, res) => {});
+authRouter.post("/auth/session/destroy/:sid", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        message: language.getTranslation("unauthorized"),
+      });
+
+    await redis.removeAllUserSessions(req.session.user.id);
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        message: language.getTranslation("session_destroyed"),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
 
 authRouter.post("/auth/sessions/clear", async (req, res) => {
   const language = new Language(req.session.language || "en");

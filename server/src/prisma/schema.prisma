@@ -21,6 +21,7 @@ model User {
   gender        Gender            @default(Unspecified)
   banned        Boolean           @default(false)
   banreason     String            @default("You have been banned!")
+  settings      UserSettings?
   sessions      Session[]
   favorites     Favorite[]
   torrents      Torrent[]
@@ -31,14 +32,26 @@ model User {
   reports       Report[]
   subscriptions User[]            @relation("SubscriptionsSubscribers")
   subscribers   User[]            @relation("SubscriptionsSubscribers")
+  comments      Comment[]
+}
+
+model UserSettings {
+  id                      Int     @id @default(autoincrement())
+  hide_last_online        Boolean @default(false)
+  disable_adult           Boolean @default(true)
+  disable_torrent_history Boolean @default(false)
+  user                    User    @relation(fields: [userId], references: [id])
+  userId                  Int
 }
 
 model Torrent {
-  id        String     @id @default(uuid())
-  user      User       @relation(fields: [userId], references: [id])
+  id        String        @id @default(uuid())
+  status    TorrentStatus @default(AVAILABLE)
+  user      User          @relation(fields: [userId], references: [id])
   userId    Int
   favorites Favorite[]
   downloads Download[]
+  comments  Comment[]
 }
 
 model Favorite {
@@ -98,6 +111,24 @@ model Report {
   reason String
   user   User   @relation(fields: [userId], references: [id])
   userId Int
+}
+
+model Comment {
+  id        String    @id @default(uuid())
+  comment   String
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id])
+  userId    Int
+  torrent   Torrent   @relation(fields: [torrentId], references: [id])
+  torrentId String
+  replies   Comment[] @relation("CommentReply")
+  repliesTo Comment   @relation("CommentReply", fields: [commentId], references: [id])
+  commentId String
+}
+
+enum TorrentStatus {
+  BLOCKED
+  AVAILABLE
 }
 
 enum Role {

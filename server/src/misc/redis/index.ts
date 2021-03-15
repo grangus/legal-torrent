@@ -23,6 +23,7 @@ export class RedisMethods {
   }
 
   async removeUserSession(userId: number, sessionId: string) {
+    await this.client.del(`sess:${sessionId}`);
     return await this.client.srem(`user:${userId}:sessions`, sessionId);
   }
 
