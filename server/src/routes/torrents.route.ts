@@ -107,11 +107,177 @@ torrentRouter.post("/torrent/rate", async (req, res) => {
   }
 });
 
-torrentRouter.post("/torrent/comment/post", async (req, res) => {});
+torrentRouter.post("/torrent/comment/post", async (req, res) => {
+  const language = new Language(req.session.language || "en");
 
-torrentRouter.post("/torrent/comment/edit", async (req, res) => {});
+  try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
 
-torrentRouter.post("/torrent/comment/delete", async (req, res) => {});
+    const { error } = joi
+      .object({
+        torrentId: joi.string().uuid().required(),
+        comment: joi.string().required(),
+        replyTo: joi.string().uuid(),
+      })
+      .validate(req.body);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    let comment = req.body.replyTo
+      ? await prisma.comment.create({
+          data: {
+            comment: req.body.comment,
+            user: { connect: { id: req.session.user.id } },
+            torrent: { connect: { id: req.body.torrentId } },
+            repliesTo: { connect: { id: req.body.replyTo } },
+          },
+        })
+      : await prisma.comment.create({
+          data: {
+            comment: req.body.comment,
+            user: { connect: { id: req.session.user.id } },
+            torrent: { connect: { id: req.body.torrentId } },
+          },
+        });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        comment,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
+torrentRouter.post("/torrent/comment/edit", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    const { error } = joi
+      .object({
+        commentId: joi.string().uuid().required(),
+        comment: joi.string().required(),
+      })
+      .validate(req.body);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    let comment = await prisma.comment.findFirst({
+      where: { id: req.body.commentId },
+    });
+
+    if (!comment)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("invalid_comment_id"),
+      });
+
+    await prisma.comment.update({
+      where: {
+        id: req.body.commentId,
+      },
+      data: {
+        comment: req.body.comment,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        message: language.getTranslation("comment_updated_successfully"),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
+torrentRouter.post("/torrent/comment/delete", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    const { error } = joi
+      .object({
+        commentId: joi.string().uuid().required(),
+      })
+      .validate(req.body);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    let comment = await prisma.comment.findFirst({
+      where: { id: req.body.commentId },
+    });
+
+    if (!comment)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("invalid_comment_id"),
+      });
+
+    await prisma.comment.delete({
+      where: {
+        id: req.body.commentId,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        message: language.getTranslation("comment_deleted_successfully"),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
 
 torrentRouter.post("/torrent/report", async (req, res) => {});
 

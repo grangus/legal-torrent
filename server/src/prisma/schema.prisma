@@ -149,8 +149,8 @@ model Comment {
   torrent   Torrent   @relation(fields: [torrentId], references: [id])
   torrentId String
   replies   Comment[] @relation("CommentReply")
-  repliesTo Comment?  @relation("CommentReply", fields: [commentId], references: [id])
-  commentId String?
+  repliesTo Comment?  @relation("CommentReply", fields: [replyCommentId], references: [id])
+  replyCommentId String?
 }
 
 model Rating {
