@@ -409,6 +409,16 @@ userRouter.post("/user/report", async (req, res) => {
       });
     }
 
+    let user = await prisma.user.findFirst({
+      where: { id: req.body.id },
+    });
+
+    if (!user)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("invalid_user"),
+      });
+
     await prisma.userReport.create({
       data: {
         reason: req.body.reason,
