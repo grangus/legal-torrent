@@ -166,7 +166,6 @@ userRouter.get("/user/downloads/history/:page", async (req, res) => {
   }
 });
 
-//TODO: before continuing display name/unique username should be confirmed
 userRouter.post("/user/profile/update", async (req, res) => {
   const language = new Language(req.session.language || "en");
 
@@ -221,7 +220,55 @@ userRouter.post("/user/profile/update", async (req, res) => {
   }
 });
 
-userRouter.post("/user/settings/update", async (req, res) => {});
+userRouter.post("/user/settings/update", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    const { error } = joi
+      .object({
+        hide_last_online: joi.boolean().required(),
+        disable_adult: joi.boolean().required(),
+        disable_torrent_history: joi.boolean().required(),
+      })
+      .validate(req.body);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    await prisma.userSettings.update({
+      where: { id: req.session.user.id },
+      data: {
+        disable_adult: req.body.disable_adult,
+        disable_torrent_history: req.body.disable_torrent_history,
+        hide_last_online: req.body.hide_last_online,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        message: "Updated settings successfully!",
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
 
 userRouter.post("/user/image/update", async (req, res) => {});
 
