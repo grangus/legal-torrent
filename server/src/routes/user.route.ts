@@ -180,9 +180,45 @@ userRouter.post("/user/profile/update", async (req, res) => {
     const { error } = joi
       .object({
         bio: joi.string().required(),
+        gender: joi.string().allow("Male", "Female", "Unspecified", "Other"),
+        location: joi.string().required(),
+        username: joi.string().alphanum().allow("_", "-"),
       })
       .validate(req.body);
-  } catch (error) {}
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    await prisma.user.update({
+      where: {
+        id: req.session.user.id,
+      },
+      data: {
+        bio: req.body.bio,
+        gender: req.body.gender,
+        location: req.body.location,
+        username: req.body.username,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        message: "Updated profile successfully!",
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
 });
 
 userRouter.post("/user/settings/update", async (req, res) => {});

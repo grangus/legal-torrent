@@ -3,9 +3,14 @@ import { Router } from "express";
 import { Language } from "../misc/translations";
 import { PrismaClient } from "@prisma/client";
 import joi from "joi";
+import parseTorrent from "parse-torrent";
 
 const torrentRouter = Router();
 const prisma = new PrismaClient();
+
+torrentRouter.post("/torrents/upload", async (req, res) => {
+  
+});
 
 torrentRouter.get("/torrents/list", async (req, res) => {});
 

@@ -23,6 +23,7 @@ authRouter.post("/auth/register", async (req, res) => {
   try {
     const { error } = joi
       .object({
+        username: joi.string().alphanum().allow("_", "-").required(),
         email: joi.string().email().required(),
         password: joi.string().min(16).required(),
         gender: joi
@@ -42,23 +43,33 @@ authRouter.post("/auth/register", async (req, res) => {
     }
 
     let userExists = await prisma.user.findFirst({
-      where: { email: req.body.email },
+      where: { email: req.body.email, OR: { username: req.body.username } },
     });
 
-    if (userExists)
+    if (userExists) {
+      let error =
+        userExists.email == req.body.email &&
+        userExists.username == req.body.username
+          ? language.getTranslation("username_and_email_taken")
+          : userExists.email == req.body.email
+          ? language.getTranslation("email_taken")
+          : language.getTranslation("username_taken");
+
       return res.status(400).json({
         status: "error",
-        error: language.getTranslation("user_exists"),
+        error,
       });
+    }
 
     let hashedPassword = await argon2.hash(req.body.password);
 
     let user = await prisma.user.create({
       data: {
+        username: req.body.username,
         email: req.body.email,
         password: hashedPassword,
         gender: req.body.gender,
-        settings: { create: true },
+        settings: { create: {} },
       },
     });
 
@@ -142,6 +153,7 @@ authRouter.post("/auth/login", async (req, res) => {
       status: "success",
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       status: "error",
       error: language.getTranslation("internal_error"),
