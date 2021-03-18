@@ -49,9 +49,12 @@ model UserSettings {
 
 model Torrent {
   id               String          @id @default(uuid())
+  name             String
+  description      String          @default("No description provided!")
   status           TorrentStatus   @default(AVAILABLE)
-  positive_ratings Int
-  negative_ratings Int
+  positive_ratings Int             @default(0)
+  negative_ratings Int             @default(0)
+  size             String
   user             User            @relation(fields: [userId], references: [id])
   userId           Int
   xbt_torrent      Xbt_Torrents?
@@ -60,11 +63,12 @@ model Torrent {
   comments         Comment[]
   reports          TorrentReport[]
   ratings          Rating[]
+  category         Category        @default(Misc)
 }
 
 model Xbt_Torrents {
   tid       Int     @id @default(autoincrement())
-  info_hash Bytes   @unique @db.Binary(20)
+  info_hash String
   seeders   Int     @default(0)
   leechers  Int     @default(0)
   completed Int     @default(0)
@@ -186,4 +190,14 @@ enum Gender {
   Female
   Other
   Unspecified
+}
+
+enum Category {
+  Movie
+  Audio
+  App
+  Game
+  Book
+  Adult
+  Misc
 }

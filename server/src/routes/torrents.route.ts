@@ -4,12 +4,184 @@ import { Language } from "../misc/translations";
 import { PrismaClient } from "@prisma/client";
 import joi from "joi";
 import parseTorrent from "parse-torrent";
+import multer from "multer";
+import bytes from "bytes";
+
+interface MulterError {}
+//couldnt use this interface - its just here for reference - parse-torrent types are so fucking dogshit
+
+// interface TorrentInfo {
+//   info: {
+//     length: 301045,
+//     name: string,
+//     'piece length': 16384,
+//     pieces: string
+//   },
+//   infoBuffer: string,
+//   name: string,
+//   announce: string[],
+//   infoHash: string,
+//   infoHashBuffer: string,
+//   created: Date,
+//   createdBy: string,
+//   urlList: string[],
+//   files: [
+//     {
+//       path: string,
+//       name: string,
+//       length: number,
+//       offset: number
+//     }
+//   ],
+//   length: number,
+//   pieceLength: number,
+//   lastPieceLength: number,
+//   pieces: string[]
+// }
 
 const torrentRouter = Router();
 const prisma = new PrismaClient();
 
+const memoryStorage = multer.memoryStorage();
+
+const upload = multer({
+  storage: memoryStorage,
+  fileFilter: (req, file, callback) => {
+    if (file.mimetype !== "application/x-bittorrent")
+      return callback(new Error("BitTorrent files only!"));
+
+    callback(null, true);
+  },
+  limits: { fileSize: 1000000 },
+}).single("torrent");
+
+torrentRouter.get("/torrents/:id/info", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    let { error } = joi.string().uuid().required().validate(req.params.id);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    let torrent = await prisma.torrent.findFirst({
+      where: {
+        id: req.params.id,
+      },
+      include: {
+        xbt_torrent: true,
+        comments: { take: 10 },
+        favorites: true,
+        downloads: true,
+      },
+    });
+
+    if (!torrent)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("torrent_not_found"),
+      });
+
+    let {
+      comments,
+      description,
+      favorites,
+      downloads,
+      negative_ratings,
+      positive_ratings,
+      status,
+      size,
+      xbt_torrent,
+      name,
+    } = torrent;
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        torrent: {
+          name,
+          status,
+          size,
+          negative_ratings,
+          positive_ratings,
+          description,
+          seeders: xbt_torrent?.seeders,
+          leechers: xbt_torrent?.leechers
+        },
+        comments,
+        favorites: favorites.length,
+        downloads: downloads.length,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
 torrentRouter.post("/torrents/upload", async (req, res) => {
-  
+  const language = new Language(req.session.language || "en");
+
+  if (!req.session.user)
+    return res.status(403).json({
+      status: "error",
+      error: language.getTranslation("unauthorized"),
+    });
+
+  upload(req, res, async (err: MulterError) => {
+    if (err)
+      return res.status(400).json({
+        error: language.getTranslation("invalid_file"),
+      });
+
+    if (!req.session.user) return;
+
+    try {
+      if (!req.file)
+        return res.status(400).json({
+          status: "error",
+          error: language.getTranslation("invalid_file"),
+        });
+
+      const torrentInfo: any = parseTorrent(req.file.buffer); //i dont like "any" but i have no choice because of crap types
+
+      let size = bytes(torrentInfo.info.length, { unitSeparator: " " })
+        ? bytes(torrentInfo.info.length, { unitSeparator: " " })
+        : "Unknown Size";
+
+      let torrent = await prisma.torrent.create({
+        data: {
+          name: torrentInfo.name,
+          size: size,
+          user: {
+            connect: { id: req.session.user.id },
+          },
+          xbt_torrent: { create: { info_hash: torrentInfo.infoHash } },
+        },
+      });
+
+      res.status(200).json({
+        status: "success",
+        data: {
+          message: "uploaded",
+          id: torrent.id,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: "error",
+        error: language.getTranslation("internal_error"),
+      });
+    }
+  });
 });
 
 torrentRouter.get("/torrents/list", async (req, res) => {});

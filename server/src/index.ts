@@ -44,12 +44,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 //This needs to be added after all middlewares and endpoints so a 404 error is sent if the endpoint does not exist
-app.use((req, res, next) => {
-  res.status(404).json({
-    status: "error",
-    error: "Not found!",
-  });
-});
+
 
 app.listen(port, () => {
   console.log(`Launched server at: http://localhost:${port}`);
