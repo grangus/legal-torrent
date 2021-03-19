@@ -139,10 +139,9 @@ torrentRouter.post("/torrents/upload", async (req, res) => {
   upload(req, res, async (err: MulterError) => {
     if (err)
       return res.status(400).json({
+        status: "error",
         error: language.getTranslation("invalid_file"),
       });
-
-    if (!req.session.user) return;
 
     try {
       if (!req.file)
@@ -162,7 +161,7 @@ torrentRouter.post("/torrents/upload", async (req, res) => {
           name: torrentInfo.name,
           size: size,
           user: {
-            connect: { id: req.session.user.id },
+            connect: { id: req.session.user?.id },
           },
           xbt_torrent: { create: { info_hash: torrentInfo.infoHash } },
         },

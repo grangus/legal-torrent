@@ -3,9 +3,102 @@ import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { Language } from "../misc/translations";
 import joi from "joi";
+import multer from "multer";
+import { existsSync, readdirSync } from "fs";
+import { resolve } from "path";
+
+interface MulterError {}
 
 const userRouter = Router();
 const prisma = new PrismaClient();
+
+userRouter.get("/user/:id/avatar", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  const { error } = joi.number().integer().validate(req.params.id);
+
+  if (error) {
+    let { type, context } = error.details[0];
+
+    return res.status(400).json({
+      status: "error",
+      error: language.getJoiTranslation(type, context),
+    });
+  }
+
+  let avatarExists = existsSync(`../uploads/avatars/${req.params.id}`);
+
+  if (avatarExists) {
+    res
+      .status(200)
+      .sendFile(
+        resolve(`../uploads/avatars/${req.params.id}/${readdirSync(
+          `../uploads/avatars/${req.params.id}`
+        ).pop()}`)
+      );
+  } else {
+    //send default avatar?
+  }
+});
+
+userRouter.post("/user/avatar/update", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  if (!req.session.user)
+    return res.status(403).json({
+      status: "error",
+      error: language.getTranslation("unauthorized"),
+    });
+
+  const diskStorage = multer.diskStorage({
+    destination: `../uploads/avatars/${req.session.user.id}`,
+    filename: (req, file, callback) => {
+      callback(
+        null,
+        `${req.session.user?.id}.${file.originalname.split(".").pop()}`
+      );
+    },
+  });
+
+  const upload = multer({
+    storage: diskStorage,
+    fileFilter: (req, file, callback) => {
+      if (!["image/jpeg", "image/png"].includes(file.mimetype))
+        return callback(new Error("PNG/JPEG files only!"));
+
+      callback(null, true);
+    },
+    limits: { fileSize: 1000000 },
+  }).single("avatar");
+
+  try {
+    upload(req, res, async (err: MulterError) => {
+      if (err)
+        return res.status(400).json({
+          status: "error",
+          error: language.getTranslation("invalid_file"),
+        });
+
+      if (!req.file)
+        return res.status(400).json({
+          status: "error",
+          error: language.getTranslation("invalid_file"),
+        });
+
+      res.status(200).json({
+        status: "success",
+        data: {
+          message: language.getTranslation("uploaded_successfully"),
+        },
+      });
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
 
 userRouter.get("/user/lang/set/:code", async (req, res) => {
   if (!["en", "es", "fr"].includes(req.params.code))
@@ -269,8 +362,6 @@ userRouter.post("/user/settings/update", async (req, res) => {
     });
   }
 });
-
-userRouter.post("/user/image/update", async (req, res) => {});
 
 //maybe this endpoint would be better off in torrents.route.ts
 userRouter.post("/user/favorites/toggle", async (req, res) => {
