@@ -42,6 +42,70 @@ interface MulterError {}
 const torrentRouter = Router();
 const prisma = new PrismaClient();
 
+torrentRouter.post("/torrents/edit", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    const { error } = joi
+      .object({
+        id: joi.string().uuid().required(),
+        name: joi.string().required(),
+        description: joi.string().required(),
+        category: joi
+          .string()
+          .required()
+          .valid("Movie", "Audio", "App", "Game", "Book", "Adult", "Misc"),
+      })
+      .validate(req.body);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    let torrent = await prisma.torrent.findFirst({
+      where: { id: req.body.id, userId: req.session.user.id },
+    });
+
+    if (!torrent)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("invalid_torrent"),
+      });
+
+    await prisma.torrent.update({
+      where: { id: req.body.id },
+      data: {
+        description: req.body.description,
+        name: req.body.name,
+        category: req.body.category,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        message: language.getTranslation("torrent_updated"),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
 torrentRouter.get("/torrents/:id/info", async (req, res) => {
   const language = new Language(req.session.language || "en");
 
