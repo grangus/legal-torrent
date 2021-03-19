@@ -42,19 +42,6 @@ interface MulterError {}
 const torrentRouter = Router();
 const prisma = new PrismaClient();
 
-const memoryStorage = multer.memoryStorage();
-
-const upload = multer({
-  storage: memoryStorage,
-  fileFilter: (req, file, callback) => {
-    if (file.mimetype !== "application/x-bittorrent")
-      return callback(new Error("BitTorrent files only!"));
-
-    callback(null, true);
-  },
-  limits: { fileSize: 1000000 },
-}).single("torrent");
-
 torrentRouter.get("/torrents/:id/info", async (req, res) => {
   const language = new Language(req.session.language || "en");
 
@@ -112,7 +99,7 @@ torrentRouter.get("/torrents/:id/info", async (req, res) => {
           positive_ratings,
           description,
           seeders: xbt_torrent?.seeders,
-          leechers: xbt_torrent?.leechers
+          leechers: xbt_torrent?.leechers,
         },
         comments,
         favorites: favorites.length,
@@ -135,6 +122,19 @@ torrentRouter.post("/torrents/upload", async (req, res) => {
       status: "error",
       error: language.getTranslation("unauthorized"),
     });
+
+  const memoryStorage = multer.memoryStorage();
+
+  const upload = multer({
+    storage: memoryStorage,
+    fileFilter: (req, file, callback) => {
+      if (file.mimetype !== "application/x-bittorrent")
+        return callback(new Error("BitTorrent files only!"));
+
+      callback(null, true);
+    },
+    limits: { fileSize: 1000000 },
+  }).single("torrent");
 
   upload(req, res, async (err: MulterError) => {
     if (err)
@@ -182,8 +182,6 @@ torrentRouter.post("/torrents/upload", async (req, res) => {
     }
   });
 });
-
-torrentRouter.get("/torrents/list", async (req, res) => {});
 
 torrentRouter.post("/torrent/rate", async (req, res) => {
   const language = new Language(req.session.language || "en");
