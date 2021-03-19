@@ -42,6 +42,55 @@ interface MulterError {}
 const torrentRouter = Router();
 const prisma = new PrismaClient();
 
+//TODO: write a custom torrent parsing/generation library to handle this. parse-torrent is absolute dogshit
+torrentRouter.get("/torrents/:id/download", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    let { error } = joi.string().uuid().required().validate(req.params.id);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    let torrent = await prisma.torrent.findFirst({
+      where: {
+        id: req.params.id,
+      },
+      include: {
+        xbt_torrent: true,
+      },
+    });
+
+    if (!torrent)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("torrent_not_found"),
+      });
+
+    let fileBuffer = Buffer.from(torrent.b64torrent, "base64");
+
+    res.set("Content-Type", "application/x-bittorrent");
+    res.set(
+      "Content-Disposition",
+      `attachment; filename="${torrent.name}.torrent"`
+    );
+
+    res.status(200).send(fileBuffer);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
 torrentRouter.post("/torrents/edit", async (req, res) => {
   const language = new Language(req.session.language || "en");
 
@@ -224,6 +273,7 @@ torrentRouter.post("/torrents/upload", async (req, res) => {
         data: {
           name: torrentInfo.name,
           size: size,
+          b64torrent: Buffer.from(req.file.buffer).toString("base64"),
           user: {
             connect: { id: req.session.user?.id },
           },
