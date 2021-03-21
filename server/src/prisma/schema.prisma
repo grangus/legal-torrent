@@ -57,6 +57,7 @@ model Torrent {
   size             String
   user             User            @relation(fields: [userId], references: [id])
   userId           Int
+  elasticId        String
   b64torrent       String          @db.LongText
   xbt_torrent      Xbt_Torrents?
   favorites        Favorite[]

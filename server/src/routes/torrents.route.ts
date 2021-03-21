@@ -6,41 +6,88 @@ import joi from "joi";
 import parseTorrent from "parse-torrent";
 import multer from "multer";
 import bytes from "bytes";
+import { Client, RequestParams, ApiResponse } from "@elastic/elasticsearch";
 
-interface MulterError {}
-//couldnt use this interface - its just here for reference - parse-torrent types are so fucking dogshit
+interface MulterError {} //so typescript doesnt rage at me
+interface Hit {
+  _index: string;
+  _type: string;
+  _id: string;
+  _score: number;
+  _source: object[];
+}
 
-// interface TorrentInfo {
-//   info: {
-//     length: 301045,
-//     name: string,
-//     'piece length': 16384,
-//     pieces: string
-//   },
-//   infoBuffer: string,
-//   name: string,
-//   announce: string[],
-//   infoHash: string,
-//   infoHashBuffer: string,
-//   created: Date,
-//   createdBy: string,
-//   urlList: string[],
-//   files: [
-//     {
-//       path: string,
-//       name: string,
-//       length: number,
-//       offset: number
-//     }
-//   ],
-//   length: number,
-//   pieceLength: number,
-//   lastPieceLength: number,
-//   pieces: string[]
-// }
+interface Suggestion {
+  text: string;
+  offset: number;
+  length: number;
+  options: [];
+}
 
 const torrentRouter = Router();
 const prisma = new PrismaClient();
+const client = new Client({ node: "http://localhost:9200" });
+
+//TODO: implement categories!
+//TODO: add torrent ids and other meta info that will be needed for the ui
+
+torrentRouter.get("/torrents/search/:page", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    const { error } = joi
+      .string()
+      .required()
+      .label("Search query")
+      .validate(req.query.query);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    let page = isNaN(parseInt(req.params.page)) ? 0 : parseInt(req.params.page);
+
+    let query: RequestParams.Search = {
+      index: "torrents",
+      body: {
+        sort: ["_score"],
+        from: page <= 0 ? 0 : page * 10,
+        size: 50,
+        query: {
+          multi_match: {
+            query: req.query.query,
+            fields: ["name", "description"],
+          },
+        },
+      },
+    };
+
+    let result: ApiResponse = await client.search(query);
+
+    let mapped = result.body.hits.hits.map((h: Hit) => h._source);
+    let pages = Math.ceil(result.body.hits.total.value / 50);
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        pages,
+        results: result.body.hits.total.value,
+        torrents: mapped,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
 
 //TODO: write a custom torrent parsing/generation library to handle this. parse-torrent is absolute dogshit
 torrentRouter.get("/torrents/:id/download", async (req, res) => {
@@ -138,6 +185,15 @@ torrentRouter.post("/torrents/edit", async (req, res) => {
         description: req.body.description,
         name: req.body.name,
         category: req.body.category,
+      },
+    });
+
+    await client.update({
+      index: "torrents",
+      id: torrent.elasticId,
+      body: {
+        name: req.body.name,
+        description: req.body.description,
       },
     });
 
@@ -269,10 +325,19 @@ torrentRouter.post("/torrents/upload", async (req, res) => {
         ? bytes(torrentInfo.info.length, { unitSeparator: " " })
         : "Unknown Size";
 
+      let result: ApiResponse = await client.index({
+        index: "torrents",
+        body: {
+          name: torrentInfo.name,
+          description: "No description provided!",
+        },
+      });
+
       let torrent = await prisma.torrent.create({
         data: {
           name: torrentInfo.name,
           size: size,
+          elasticId: result.body._id,
           b64torrent: Buffer.from(req.file.buffer).toString("base64"),
           user: {
             connect: { id: req.session.user?.id },
