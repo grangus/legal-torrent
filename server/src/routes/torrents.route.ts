@@ -33,8 +33,12 @@ const torrentRouter = Router();
 const prisma = new PrismaClient();
 const client = new Client({ node: "http://localhost:9200" });
 
-//TODO: implement categories!
 //TODO: add torrent ids and other meta info that will be needed for the ui
+//TODO: implement sorting by category, downloads, leechers, seeders, etc
+//TODO: implement the movie db
+//TODO: implement torrent of the day/week/month(cache in redis)
+//TODO: implement the top 100 most downloaded torrents and cache the data in redis
+//TODO: implement upload notifications for followers
 
 torrentRouter.get("/torrents/search/:page", async (req, res) => {
   const language = new Language(req.session.language || "en");

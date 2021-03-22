@@ -8,6 +8,7 @@ const staffRouter = Router();
 const prisma = new PrismaClient();
 
 //TODO: implement audit log
+//TODO: implement exclusive torrents
 
 staffRouter.get("/torrents/reports/list/:page", async (req, res) => {
   const language = new Language(req.session.language || "en");

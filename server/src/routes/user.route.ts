@@ -12,6 +12,8 @@ interface MulterError {}
 const userRouter = Router();
 const prisma = new PrismaClient();
 
+//TODO: add a notification deletion api
+
 userRouter.get("/user/:id/avatar", async (req, res) => {
   const language = new Language(req.session.language || "en");
 
