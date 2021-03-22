@@ -7,6 +7,8 @@ import joi from "joi";
 const staffRouter = Router();
 const prisma = new PrismaClient();
 
+//TODO: implement audit log
+
 staffRouter.get("/torrents/reports/list/:page", async (req, res) => {
   const language = new Language(req.session.language || "en");
 
@@ -238,7 +240,7 @@ staffRouter.post("/torrents/block", async (req: Request, res) => {
     });
 
     if (!torrent)
-      res.status(400).json({
+      return res.status(400).json({
         status: "error",
         error: language.getTranslation("invalid_torrent"),
       });
@@ -271,10 +273,241 @@ staffRouter.post("/torrents/block", async (req: Request, res) => {
   }
 });
 
-staffRouter.post("/user/ban", async (req, res) => {});
+staffRouter.post("/user/ban/toggle", async (req: Request, res) => {
+  const language = new Language(req.session.language || "en");
 
-staffRouter.post("/user/edit", async (req, res) => {});
+  try {
+    if (!req.session.user)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
 
-staffRouter.get("/users/reports", async (req, res) => {});
+    if (!["ADMIN", "MODERATOR"].includes(req.session.user.role))
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    const { error } = joi
+      .object({
+        id: joi.number().integer().required(),
+        reason: joi.string().required(),
+      })
+      .validate(req.body);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    let user = await prisma.user.findFirst({
+      where: {
+        id: req.body.id,
+      },
+    });
+
+    if (!user)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("invalid_user"),
+      });
+
+    await prisma.user.update({
+      where: {
+        id: req.body.id,
+      },
+      data: {
+        banned: !user.banned,
+        ban_reason: req.body.reason,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        message: !user.banned
+          ? language.getTranslation("user_banned")
+          : language.getTranslation("user_unbanned"),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
+staffRouter.post("/user/edit", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    if (!["ADMIN", "MODERATOR"].includes(req.session.user.role))
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    const { error } = joi
+      .object({
+        id: joi.number().integer().required(),
+        update: joi
+          .object({
+            email: joi.string().email().required(),
+            username: joi.string().required(),
+            password: joi.string().required(),
+            bio: joi.string().required(),
+            location: joi.string().required(),
+            gender: joi
+              .string()
+              .allow("Male", "Female", "Other", "Unspecified")
+              .required(),
+          })
+          .required(),
+      })
+      .validate(req.body);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    let user = await prisma.user.findFirst({
+      where: {
+        id: req.body.id,
+      },
+    });
+
+    if (!user)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("invalid_user"),
+      });
+
+    let { username, email, password, bio, location, gender } = req.body.update;
+
+    await prisma.user.update({
+      where: {
+        id: req.body.id,
+      },
+      data: { username, email, password, bio, location, gender },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        message: language.getTranslation("user_updated_successfully"),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
+staffRouter.get("/users/reports/:page", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    if (!["ADMIN", "MODERATOR"].includes(req.session.user.role))
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    let page = isNaN(parseInt(req.params.page)) ? 0 : parseInt(req.params.page);
+
+    let reports = await prisma.userReport.findMany({
+      skip: page <= 0 ? 0 : page * 10,
+      take: 25,
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        reports,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
+staffRouter.post("/user/reports/delete", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    if (!["ADMIN", "MODERATOR"].includes(req.session.user.role))
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    const { error } = joi
+      .object({
+        id: joi.string().required(),
+      })
+      .validate(req.body);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    await prisma.userReport.delete({
+      where: {
+        id: req.body.id,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        message: language.getTranslation("report_deleted"),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
 
 export default staffRouter;
