@@ -9,12 +9,17 @@ import bytes from "bytes";
 import { Client, RequestParams, ApiResponse } from "@elastic/elasticsearch";
 
 interface MulterError {} //so typescript doesnt rage at me
+interface TorrentSearchResult {
+  name: string;
+  description: string;
+}
+
 interface Hit {
   _index: string;
   _type: string;
   _id: string;
   _score: number;
-  _source: object[];
+  _source: TorrentSearchResult;
 }
 
 interface Suggestion {
@@ -69,7 +74,11 @@ torrentRouter.get("/torrents/search/:page", async (req, res) => {
 
     let result: ApiResponse = await client.search(query);
 
-    let mapped = result.body.hits.hits.map((h: Hit) => h._source);
+    let mapped = result.body.hits.hits.map((h: Hit) => {
+      const { name, description } = h._source;
+      return { name, description, id: h._id };
+    });
+
     let pages = Math.ceil(result.body.hits.total.value / 50);
 
     res.status(200).json({
@@ -118,6 +127,12 @@ torrentRouter.get("/torrents/:id/download", async (req, res) => {
       return res.status(400).json({
         status: "error",
         error: language.getTranslation("torrent_not_found"),
+      });
+
+    if (torrent.status !== "AVAILABLE")
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("torrent_not_available"),
       });
 
     let fileBuffer = Buffer.from(torrent.b64torrent, "base64");
@@ -215,7 +230,7 @@ torrentRouter.get("/torrents/:id/info", async (req, res) => {
   const language = new Language(req.session.language || "en");
 
   try {
-    let { error } = joi.string().uuid().required().validate(req.params.id);
+    let { error } = joi.string().required().validate(req.params.id);
 
     if (error) {
       let { type, context } = error.details[0];
@@ -228,7 +243,7 @@ torrentRouter.get("/torrents/:id/info", async (req, res) => {
 
     let torrent = await prisma.torrent.findFirst({
       where: {
-        id: req.params.id,
+        OR: [{ id: req.params.id }, { elasticId: req.params.id }],
       },
       include: {
         xbt_torrent: true,
@@ -245,9 +260,11 @@ torrentRouter.get("/torrents/:id/info", async (req, res) => {
       });
 
     let {
+      id,
       comments,
       description,
       favorites,
+      category,
       downloads,
       negative_ratings,
       positive_ratings,
@@ -261,8 +278,10 @@ torrentRouter.get("/torrents/:id/info", async (req, res) => {
       status: "success",
       data: {
         torrent: {
+          id,
           name,
           status,
+          category,
           size,
           negative_ratings,
           positive_ratings,
@@ -276,6 +295,7 @@ torrentRouter.get("/torrents/:id/info", async (req, res) => {
       },
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       status: "error",
       error: language.getTranslation("internal_error"),
@@ -330,6 +350,7 @@ torrentRouter.post("/torrents/upload", async (req, res) => {
         body: {
           name: torrentInfo.name,
           description: "No description provided!",
+          category: "Misc",
         },
       });
 
@@ -337,6 +358,8 @@ torrentRouter.post("/torrents/upload", async (req, res) => {
         data: {
           name: torrentInfo.name,
           size: size,
+          status:
+            req.session.user?.role == "UPLOADER" ? "AVAILABLE" : "UNCONFIRMED",
           elasticId: result.body._id,
           b64torrent: Buffer.from(req.file.buffer).toString("base64"),
           user: {

@@ -30,10 +30,10 @@ export class Language {
     }
   }
 
-  getTranslation(code: string) {
-    let translation = dotprop.get(this.lang, code);
+  getTranslation(code: string): string {
+    let translation: string = dotprop.get(this.lang, code) || code;
 
-    return translation || this.lang.unknown;
+    return translation;
   }
 
   getJoiTranslation(code: string, context: Context | undefined) {
@@ -51,6 +51,6 @@ export class Language {
       });
     }
 
-    return translation ? `"${context?.key}" ${translation}` : this.lang.unknown;
+    return translation ? `"${context?.key}" ${translation}` : code;
   }
 }

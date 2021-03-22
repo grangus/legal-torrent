@@ -51,7 +51,7 @@ model Torrent {
   id               String          @id @default(uuid())
   name             String
   description      String          @default("No description provided!")
-  status           TorrentStatus   @default(AVAILABLE)
+  status           TorrentStatus   @default(UNCONFIRMED)
   positive_ratings Int             @default(0)
   negative_ratings Int             @default(0)
   size             String
@@ -183,7 +183,8 @@ enum TorrentStatus {
 enum Role {
   USER
   UPLOADER
-  STAFF
+  VALIDATOR
+  MODERATOR
   ADMIN
 }
 

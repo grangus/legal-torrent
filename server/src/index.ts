@@ -1,21 +1,41 @@
 const port = 3000;
 
 import express, { Request, Response, NextFunction } from "express";
+import http from "http";
 import routes from "./routes";
 import session from "express-session";
 import redisSession from "connect-redis";
 import ioredis from "ioredis";
 import csurf from "csurf";
 import { device } from "./middlewares/device";
+import WebSocket, { Ws } from "ws";
+import Socket from "./misc/socket";
 
 interface Error {
   code: string;
 }
 
-const app = express();
+declare module "ws" {
+  interface Ws extends WebSocket {
+    id?: number;
+  }
+}
 
+declare module "express" {
+  interface Request {
+    wss?: Socket;
+  }
+}
+
+const app = express();
+const server = http.createServer(app);
 const Store = redisSession(session);
 const redis = new ioredis();
+
+const wss = new WebSocket.Server({
+  clientTracking: true,
+  noServer: true,
+});
 
 app.use(
   session({
@@ -30,6 +50,12 @@ app.use(
   })
 );
 
+//Making the websocket acessible from every endpoint - must be included before routes!
+app.use((req: Request, res, next) => {
+  req.wss = new Socket(wss);
+});
+
+
 app.use(device);
 app.use(csurf());
 app.use(express.json());
@@ -43,9 +69,24 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     .json({ status: "error", error: "Invalid CSRF token provided!" });
 });
 
-//This needs to be added after all middlewares and endpoints so a 404 error is sent if the endpoint does not exist
 
+server.on("upgrade", (req: Request, socket, head) => {
+  if (!req.session || !req.session.user) {
+    socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+    return socket.destroy();
+  }
 
-app.listen(port, () => {
+  wss.handleUpgrade(req, socket, head, (ws) => {
+    wss.emit("connection", ws, req);
+  });
+});
+
+wss.on("connection", (ws: Ws, req: Request) => {
+  if (!req.session || !req.session.user) return ws.close();
+
+  ws.id = req.session.user.id;
+});
+
+server.listen(port, () => {
   console.log(`Launched server at: http://localhost:${port}`);
 });
