@@ -1,5 +1,5 @@
 //All of the endpoints for things regarding torrents will go here.
-import { Router } from "express";
+import { Router, Request } from "express";
 import { Language } from "../misc/translations";
 import { PrismaClient } from "@prisma/client";
 import joi from "joi";
@@ -9,9 +9,14 @@ import bytes from "bytes";
 import { Client, RequestParams, ApiResponse } from "@elastic/elasticsearch";
 
 interface MulterError {} //so typescript doesnt rage at me
+
 interface TorrentSearchResult {
   name: string;
   description: string;
+  category: string;
+  downloads: number;
+  seeders: number;
+  leechers: number;
 }
 
 interface Hit {
@@ -22,33 +27,27 @@ interface Hit {
   _source: TorrentSearchResult;
 }
 
-interface Suggestion {
-  text: string;
-  offset: number;
-  length: number;
-  options: [];
-}
-
 const torrentRouter = Router();
 const prisma = new PrismaClient();
 const client = new Client({ node: "http://localhost:9200" });
 
-//TODO: add torrent ids and other meta info that will be needed for the ui
-//TODO: implement sorting by category, downloads, leechers, seeders, etc
 //TODO: implement the movie db
 //TODO: implement torrent of the day/week/month(cache in redis)
 //TODO: implement the top 100 most downloaded torrents and cache the data in redis
-//TODO: implement upload notifications for followers
 
-torrentRouter.get("/torrents/search/:page", async (req, res) => {
+torrentRouter.get("/torrents/search/:page", async (req: Request, res) => {
   const language = new Language(req.session.language || "en");
 
   try {
     const { error } = joi
-      .string()
-      .required()
-      .label("Search query")
-      .validate(req.query.query);
+      .object({
+        query: joi.string().required().label("Search query"),
+        category: joi
+          .string()
+          .valid("Movie", "Audio", "App", "Game", "Book", "Adult", "Misc"),
+        sortBy: joi.string().valid("downloads", "leechers", "seeders"),
+      })
+      .validate(req.query);
 
     if (error) {
       let { type, context } = error.details[0];
@@ -61,16 +60,40 @@ torrentRouter.get("/torrents/search/:page", async (req, res) => {
 
     let page = isNaN(parseInt(req.params.page)) ? 0 : parseInt(req.params.page);
 
+    let filter = [];
+    let sort: any = ["_score"];
+
+    if (req.query?.category) {
+      filter.push({
+        term: {
+          category: String(req.query?.category).toLowerCase(),
+        },
+      });
+    }
+
+    if (req.query?.sortBy) {
+      sort.push({
+        [req.query.sortBy]: "desc",
+      });
+    }
+
     let query: RequestParams.Search = {
       index: "torrents",
       body: {
-        sort: ["_score"],
+        sort: sort,
         from: page <= 0 ? 0 : page * 10,
         size: 50,
         query: {
-          multi_match: {
-            query: req.query.query,
-            fields: ["name", "description"],
+          bool: {
+            must: [
+              {
+                multi_match: {
+                  query: req.query?.query,
+                  fields: ["name", "description"],
+                },
+              },
+            ],
+            filter: filter,
           },
         },
       },
@@ -79,8 +102,23 @@ torrentRouter.get("/torrents/search/:page", async (req, res) => {
     let result: ApiResponse = await client.search(query);
 
     let mapped = result.body.hits.hits.map((h: Hit) => {
-      const { name, description } = h._source;
-      return { name, description, id: h._id };
+      const {
+        name,
+        description,
+        category,
+        downloads,
+        leechers,
+        seeders,
+      } = h._source;
+      return {
+        name,
+        description,
+        category,
+        downloads,
+        leechers,
+        seeders,
+        id: h._id,
+      };
     });
 
     let pages = Math.ceil(result.body.hits.total.value / 50);
@@ -94,7 +132,7 @@ torrentRouter.get("/torrents/search/:page", async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
+    console.dir(error, { depth: null });
     res.status(500).json({
       status: "error",
       error: language.getTranslation("internal_error"),
@@ -216,6 +254,8 @@ torrentRouter.post("/torrents/edit", async (req, res) => {
       },
     });
 
+    await client.indices.refresh({ index: "torrents" });
+
     res.status(200).json({
       status: "success",
       data: {
@@ -307,7 +347,7 @@ torrentRouter.get("/torrents/:id/info", async (req, res) => {
   }
 });
 
-torrentRouter.post("/torrents/upload", async (req, res) => {
+torrentRouter.post("/torrents/upload", async (req: Request, res) => {
   const language = new Language(req.session.language || "en");
 
   if (!req.session.user)
@@ -355,8 +395,13 @@ torrentRouter.post("/torrents/upload", async (req, res) => {
           name: torrentInfo.name,
           description: "No description provided!",
           category: "Misc",
+          downloads: 0,
+          seeders: 0,
+          leechers: 0,
         },
       });
+
+      await client.indices.refresh({ index: "torrents" });
 
       let torrent = await prisma.torrent.create({
         data: {
@@ -372,6 +417,34 @@ torrentRouter.post("/torrents/upload", async (req, res) => {
           xbt_torrent: { create: { info_hash: torrentInfo.infoHash } },
         },
       });
+
+      let user = await prisma.user.findFirst({
+        where: { id: req.session.user?.id },
+        include: { subscribers: true },
+      });
+
+      if (!user) return;
+
+      let userIds = user.subscribers.map((s) => {
+        return s.id;
+      });
+
+      req.wss?.uploadNotification(userIds, {
+        title: language.getTranslation("new_sub_upload"),
+        message: torrentInfo.name,
+      });
+
+      let operations = user.subscribers.map((s) => {
+        return prisma.notification.create({
+          data: {
+            title: language.getTranslation("new_sub_upload"),
+            message: torrentInfo.name,
+            user: { connect: { id: s.id } },
+          },
+        });
+      });
+
+      await prisma.$transaction(operations);
 
       res.status(200).json({
         status: "success",

@@ -28,4 +28,14 @@ export default class Socket {
       client.send(notification);
     });
   }
+
+  uploadNotification(userIds: number[], notification: Notification) {
+    this.wss.clients.forEach((client: Ws) => {
+      if (!client.id) return;
+
+      if (userIds.includes(client.id)) {
+        client.send(notification);
+      }
+    });
+  }
 }

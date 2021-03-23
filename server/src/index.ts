@@ -10,10 +10,13 @@ import csurf from "csurf";
 import { device } from "./middlewares/device";
 import WebSocket, { Ws } from "ws";
 import Socket from "./misc/socket";
+import start from "./misc/cronjobs";
 
 interface Error {
   code: string;
 }
+
+type Category = "Movie" | "Audio" | "App" | "Game" | "Book" | "Adult" | "Misc";
 
 declare module "ws" {
   interface Ws extends WebSocket {
@@ -24,6 +27,14 @@ declare module "ws" {
 declare module "express" {
   interface Request {
     wss?: Socket;
+  }
+}
+
+declare module "qs" {
+  interface ParsedQs {
+    sortBy?: string;
+    category?: Category;
+    query?: string;
   }
 }
 
@@ -53,8 +64,8 @@ app.use(
 //Making the websocket acessible from every endpoint - must be included before routes!
 app.use((req: Request, res, next) => {
   req.wss = new Socket(wss);
+  next();
 });
-
 
 app.use(device);
 app.use(csurf());
@@ -68,7 +79,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     .status(401)
     .json({ status: "error", error: "Invalid CSRF token provided!" });
 });
-
 
 server.on("upgrade", (req: Request, socket, head) => {
   if (!req.session || !req.session.user) {
@@ -88,5 +98,8 @@ wss.on("connection", (ws: Ws, req: Request) => {
 });
 
 server.listen(port, () => {
-  console.log(`Launched server at: http://localhost:${port}`);
+  console.log(
+    `Launched server at: http://localhost:${port}\nCron jobs starting...`
+  );
+  start();
 });
