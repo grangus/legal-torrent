@@ -7,6 +7,8 @@ import parseTorrent from "parse-torrent";
 import multer from "multer";
 import bytes from "bytes";
 import { Client, RequestParams, ApiResponse } from "@elastic/elasticsearch";
+import tmdb from "node-themoviedb";
+import { RedisMethods } from "../misc/redis";
 
 interface MulterError {} //so typescript doesnt rage at me
 
@@ -29,11 +31,94 @@ interface Hit {
 
 const torrentRouter = Router();
 const prisma = new PrismaClient();
+const redis = new RedisMethods();
 const client = new Client({ node: "http://localhost:9200" });
+const mdb = new tmdb(process.env.TMDB_KEY || "");
 
-//TODO: implement the movie db
-//TODO: implement torrent of the day/week/month(cache in redis)
-//TODO: implement the top 100 most downloaded torrents and cache the data in redis
+torrentRouter.get("/torrents/top/:time", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    const { error } = joi
+      .object({
+        period: joi
+          .string()
+          .required()
+          .valid("all", "month", "week", "day")
+          .label("Time period"),
+      })
+      .validate(req.query);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    if (!req.query.period) return;
+
+    let top = redis.getTop(req.query.period);
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        top,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
+torrentRouter.get("/torrents/moviesearch", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    const { error } = joi
+      .object({
+        query: joi.string().required().label("Search query"),
+      })
+      .validate(req.query);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    if (!req.query.query) return;
+
+    let searchResults = await mdb.search.movies({
+      query: {
+        query: req.query.query,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        movies: searchResults.data.results.slice(0, 5).map((m) => {
+          const { id, poster_path, overview, title } = m;
+          return { id, poster_path, overview, title };
+        }),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
 
 torrentRouter.get("/torrents/search/:page", async (req: Request, res) => {
   const language = new Language(req.session.language || "en");
@@ -177,6 +262,15 @@ torrentRouter.get("/torrents/:id/download", async (req, res) => {
         error: language.getTranslation("torrent_not_available"),
       });
 
+    await prisma.torrent.update({
+      where: {
+        id: req.params.id,
+      },
+      data: {
+        download_count: { increment: 1 },
+      },
+    });
+
     let fileBuffer = Buffer.from(torrent.b64torrent, "base64");
 
     res.set("Content-Type", "application/x-bittorrent");
@@ -205,6 +299,10 @@ torrentRouter.post("/torrents/edit", async (req, res) => {
         error: language.getTranslation("unauthorized"),
       });
 
+    let domains: Set<string> = new Set();
+
+    domains.add("image.tmdb.org"); //TODO: add image serving subdomain
+
     const { error } = joi
       .object({
         id: joi.string().uuid().required(),
@@ -214,6 +312,10 @@ torrentRouter.post("/torrents/edit", async (req, res) => {
           .string()
           .required()
           .valid("Movie", "Audio", "App", "Game", "Book", "Adult", "Misc"),
+        image: joi.string().uri({
+          scheme: "https",
+          domain: { tlds: { allow: domains }, minDomainSegments: 3 },
+        }),
       })
       .validate(req.body);
 

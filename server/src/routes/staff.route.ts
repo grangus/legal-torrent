@@ -78,11 +78,25 @@ staffRouter.post("/torrents/reports/delete", async (req, res) => {
       });
     }
 
-    await prisma.torrentReport.delete({
+    const deleteReport = prisma.torrentReport.delete({
       where: {
         id: req.body.id,
       },
     });
+
+    const createAuditLogAction = prisma.staffAction.create({
+      data: {
+        action_type: "TorrentReportDeleted",
+        info: `[${req.session.user.email} - ${req.session.user.id}] deleted a report.`,
+        user: {
+          connect: {
+            id: req.session.user.id,
+          },
+        },
+      },
+    });
+
+    await prisma.$transaction([deleteReport, createAuditLogAction]);
 
     res.status(200).json({
       status: "success",
@@ -179,7 +193,7 @@ staffRouter.post("/torrents/confirm", async (req, res) => {
       });
     }
 
-    await prisma.torrent.update({
+    const setAvailable = prisma.torrent.update({
       where: {
         id: req.body.id,
       },
@@ -187,6 +201,20 @@ staffRouter.post("/torrents/confirm", async (req, res) => {
         status: "AVAILABLE",
       },
     });
+
+    const createAuditLogAction = prisma.staffAction.create({
+      data: {
+        action_type: "TorrentConfirmed",
+        info: `[${req.session.user.email} - ${req.session.user.id}] confirmed a torrent. ID: ${req.body.id}.`,
+        user: {
+          connect: {
+            id: req.session.user.id,
+          },
+        },
+      },
+    });
+
+    await prisma.$transaction([setAvailable, createAuditLogAction]);
 
     res.status(200).json({
       status: "success",
@@ -246,7 +274,7 @@ staffRouter.post("/torrents/block", async (req: Request, res) => {
         error: language.getTranslation("invalid_torrent"),
       });
 
-    await prisma.torrent.update({
+    const blockTorrent = prisma.torrent.update({
       where: {
         id: req.body.id,
       },
@@ -254,6 +282,20 @@ staffRouter.post("/torrents/block", async (req: Request, res) => {
         status: "BLOCKED",
       },
     });
+
+    const createAuditLogAction = prisma.staffAction.create({
+      data: {
+        action_type: "TorrentBlocked",
+        info: `[${req.session.user.email} - ${req.session.user.id}] blocked a torrent. ID: ${req.body.id}.`,
+        user: {
+          connect: {
+            id: req.session.user.id,
+          },
+        },
+      },
+    });
+
+    await prisma.$transaction([blockTorrent, createAuditLogAction]);
 
     req.wss?.sendNotification(torrent?.userId, {
       message: req.body.message,
@@ -318,7 +360,7 @@ staffRouter.post("/user/ban/toggle", async (req: Request, res) => {
         error: language.getTranslation("invalid_user"),
       });
 
-    await prisma.user.update({
+    const toggleBan = prisma.user.update({
       where: {
         id: req.body.id,
       },
@@ -327,6 +369,20 @@ staffRouter.post("/user/ban/toggle", async (req: Request, res) => {
         ban_reason: req.body.reason,
       },
     });
+
+    const createAuditLogAction = prisma.staffAction.create({
+      data: {
+        action_type: "UserBanned",
+        info: `[${req.session.user.email} - ${req.session.user.id}] ${!user.banned ? "banned" : "unbanned"} a user. ID: ${user.id}`,
+        user: {
+          connect: {
+            id: req.session.user.id,
+          },
+        },
+      },
+    });
+
+    await prisma.$transaction([toggleBan, createAuditLogAction]);
 
     res.status(200).json({
       status: "success",
@@ -402,12 +458,26 @@ staffRouter.post("/user/edit", async (req, res) => {
 
     let { username, email, password, bio, location, gender } = req.body.update;
 
-    await prisma.user.update({
+    const updateUser = prisma.user.update({
       where: {
         id: req.body.id,
       },
       data: { username, email, password, bio, location, gender },
     });
+
+    const createAuditLogAction = prisma.staffAction.create({
+      data: {
+        action_type: "UserEdited",
+        info: `[${req.session.user.email} - ${req.session.user.id}] updated a user. ID: ${user.id}`,
+        user: {
+          connect: {
+            id: req.session.user.id,
+          },
+        },
+      },
+    });
+
+    await prisma.$transaction([updateUser, createAuditLogAction]);
 
     res.status(200).json({
       status: "success",
@@ -491,11 +561,25 @@ staffRouter.post("/user/reports/delete", async (req, res) => {
       });
     }
 
-    await prisma.userReport.delete({
+    const deleteReport = prisma.userReport.delete({
       where: {
         id: req.body.id,
       },
     });
+
+    const createAuditLogAction = prisma.staffAction.create({
+      data: {
+        action_type: "UserReportDeleted",
+        info: `[${req.session.user.email} - ${req.session.user.id}] deleted a report.`,
+        user: {
+          connect: {
+            id: req.session.user.id,
+          },
+        },
+      },
+    });
+
+    await prisma.$transaction([deleteReport, createAuditLogAction]);
 
     res.status(200).json({
       status: "success",

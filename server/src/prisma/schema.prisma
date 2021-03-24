@@ -7,7 +7,7 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["createMany"]
 }
 
@@ -37,6 +37,7 @@ model User {
   subscribers   User[]            @relation("SubscriptionsSubscribers")
   comments      Comment[]
   ratings       Rating[]
+  actions       StaffAction[]
 }
 
 model UserSettings {
@@ -55,7 +56,9 @@ model Torrent {
   status           TorrentStatus   @default(UNCONFIRMED)
   positive_ratings Int             @default(0)
   negative_ratings Int             @default(0)
+  image            String          @default("https://pobocha.pl/dist/torrent/src/assets/images/default-cover.png")
   size             String
+  download_count   Int             @default(0)
   user             User            @relation(fields: [userId], references: [id])
   userId           Int
   elasticId        String
@@ -168,6 +171,27 @@ model Rating {
   userId    Int
   torrent   Torrent    @relation(fields: [torrentId], references: [id])
   torrentId String
+}
+
+model StaffAction {
+  id          Int        @id @default(autoincrement())
+  action_type ActionType @default(Unknown)
+  info        String
+  time        DateTime   @default(now())
+  user        User       @relation(fields: [userId], references: [id])
+  userId      Int
+}
+
+enum ActionType {
+  Unknown
+  TorrentReportDeleted
+  TorrentConfirmed
+  TorrentBlocked
+  UserBanned
+  UserEdited
+  UserReportDeleted
+  ExclusiveListingEnabled
+  ExclusiveListingDisabled
 }
 
 enum RatingType {

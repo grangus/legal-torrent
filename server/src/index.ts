@@ -1,5 +1,5 @@
 const port = 3000;
-
+import dotenv from "dotenv";
 import express, { Request, Response, NextFunction } from "express";
 import http from "http";
 import routes from "./routes";
@@ -11,6 +11,8 @@ import { device } from "./middlewares/device";
 import WebSocket, { Ws } from "ws";
 import Socket from "./misc/socket";
 import start from "./misc/cronjobs";
+
+dotenv.config();
 
 interface Error {
   code: string;
@@ -31,10 +33,13 @@ declare module "express" {
 }
 
 declare module "qs" {
+  type TimePeriod = "month" | "week" | "day";
+
   interface ParsedQs {
     sortBy?: string;
     category?: Category;
     query?: string;
+    period?: TimePeriod;
   }
 }
 

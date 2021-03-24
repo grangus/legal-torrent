@@ -1,6 +1,15 @@
 import { SessionData } from "express-session";
 import ioredis, { Redis } from "ioredis";
 
+type TimePeriod = "month" | "week" | "day";
+
+interface TopTorrent {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+}
+
 export class RedisMethods {
   private client: Redis;
 
@@ -58,5 +67,18 @@ export class RedisMethods {
     }
 
     return sessions;
+  }
+
+  async getTop(period: TimePeriod) {
+    let result = await this.client.get(`top-torrents-${period}`);
+
+    return result ? JSON.parse(result) : [];
+  }
+
+  async setTop(period: TimePeriod, torrents: TopTorrent[]) {
+    return await this.client.set(
+      `top-torrents-${period}`,
+      JSON.stringify(torrents)
+    );
   }
 }
