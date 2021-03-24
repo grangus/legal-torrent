@@ -59,6 +59,7 @@ model Torrent {
   image            String          @default("https://pobocha.pl/dist/torrent/src/assets/images/default-cover.png")
   size             String
   download_count   Int             @default(0)
+  exclusive        Boolean         @default(false)
   user             User            @relation(fields: [userId], references: [id])
   userId           Int
   elasticId        String

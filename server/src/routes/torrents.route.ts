@@ -35,6 +35,26 @@ const redis = new RedisMethods();
 const client = new Client({ node: "http://localhost:9200" });
 const mdb = new tmdb(process.env.TMDB_KEY || "");
 
+torrentRouter.get("/torrents/exclusive", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    let exclusive = await redis.getExclusiveTorrents();
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        exclusive,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
 torrentRouter.get("/torrents/top/:time", async (req, res) => {
   const language = new Language(req.session.language || "en");
 

@@ -1,14 +1,107 @@
 //Staff/Admin endpoints will go in here.
 import { Router, Request } from "express";
+import { RedisMethods } from "../misc/redis";
 import { Language } from "../misc/translations";
 import { PrismaClient } from "@prisma/client";
 import joi from "joi";
 
 const staffRouter = Router();
 const prisma = new PrismaClient();
+const redis = new RedisMethods();
 
-//TODO: implement audit log
-//TODO: implement exclusive torrents
+staffRouter.post("/torrent/exclusivity/toggle", async (req: Request, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.session.user)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    if (!["ADMIN"].includes(req.session.user.role))
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("unauthorized"),
+      });
+
+    const { error } = joi
+      .object({
+        id: joi.number().integer().required(),
+      })
+      .validate(req.body);
+
+    if (error) {
+      let { type, context } = error.details[0];
+
+      return res.status(400).json({
+        status: "error",
+        error: language.getJoiTranslation(type, context),
+      });
+    }
+
+    let torrent = await prisma.torrent.findFirst({
+      where: {
+        id: req.body.id,
+      },
+    });
+
+    if (!torrent)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("invalid_torrent"),
+      });
+
+    const toggleExclusivity = prisma.torrent.update({
+      where: {
+        id: req.body.id,
+      },
+      data: {
+        exclusive: !torrent.exclusive,
+      },
+    });
+
+    const createAuditLogAction = prisma.staffAction.create({
+      data: {
+        action_type: !torrent.exclusive
+          ? "ExclusiveListingEnabled"
+          : "ExclusiveListingDisabled",
+        info: `[${req.session.user.email} - ${req.session.user.id}] ${
+          !torrent.exclusive ? "enabled" : "disabled"
+        } exclusivity tag on a torrent. ID: ${torrent.id}`,
+        user: {
+          connect: {
+            id: req.session.user.id,
+          },
+        },
+      },
+    });
+
+    await prisma.$transaction([toggleExclusivity, createAuditLogAction]);
+
+    const { name, description, id, image } = torrent;
+
+    if (!torrent.exclusive) {
+      await redis.addExclusiveTorrent({ name, description, id, image });
+    } else {
+      await redis.removeExclusiveTorrent(id);
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        message: !torrent.exclusive
+          ? language.getTranslation("exclusivity_enabled")
+          : language.getTranslation("exclusivity_disabled"),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
 
 staffRouter.get("/torrents/reports/list/:page", async (req, res) => {
   const language = new Language(req.session.language || "en");
@@ -373,7 +466,9 @@ staffRouter.post("/user/ban/toggle", async (req: Request, res) => {
     const createAuditLogAction = prisma.staffAction.create({
       data: {
         action_type: "UserBanned",
-        info: `[${req.session.user.email} - ${req.session.user.id}] ${!user.banned ? "banned" : "unbanned"} a user. ID: ${user.id}`,
+        info: `[${req.session.user.email} - ${req.session.user.id}] ${
+          !user.banned ? "banned" : "unbanned"
+        } a user. ID: ${user.id}`,
         user: {
           connect: {
             id: req.session.user.id,

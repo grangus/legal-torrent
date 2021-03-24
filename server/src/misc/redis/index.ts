@@ -81,4 +81,36 @@ export class RedisMethods {
       JSON.stringify(torrents)
     );
   }
+
+  async getExclusiveTorrents(): Promise<TopTorrent[]> {
+    let result = await this.client.get("exclusive-torrents");
+
+    return result ? JSON.parse(result) : [];
+  }
+
+  private async setExclusiveTorrents(torrents: TopTorrent[]) {
+    return await this.client.set(
+      "exclusive-torrents",
+      JSON.stringify(torrents)
+    );
+  }
+
+  async addExclusiveTorrent(torrent: TopTorrent) {
+    let torrents = await this.getExclusiveTorrents();
+
+    torrents.push(torrent);
+
+    return await this.setExclusiveTorrents(torrents);
+  }
+
+  async removeExclusiveTorrent(id: string) {
+    let torrents = await this.getExclusiveTorrents();
+    let index = torrents.findIndex((t) => t.id == id);
+
+    if (index < 0) return;
+
+    torrents.splice(index, 1);
+
+    return await this.setExclusiveTorrents(torrents);
+  }
 }
