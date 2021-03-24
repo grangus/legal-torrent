@@ -9,6 +9,7 @@ import ioredis from "ioredis";
 import csurf from "csurf";
 import { device } from "./middlewares/device";
 import WebSocket, { Ws } from "ws";
+import {join} from "path";
 import Socket from "./misc/socket";
 import start from "./misc/cronjobs";
 
@@ -44,6 +45,7 @@ declare module "qs" {
 }
 
 const app = express();
+const staticApp = express();
 const server = http.createServer(app);
 const Store = redisSession(session);
 const redis = new ioredis();
@@ -52,6 +54,10 @@ const wss = new WebSocket.Server({
   clientTracking: true,
   noServer: true,
 });
+
+console.log(join(__dirname, "./uploads/avatars"));
+
+staticApp.use("/avatars", express.static(join(__dirname, "./uploads/avatars")));
 
 app.use(
   session({
@@ -107,4 +113,8 @@ server.listen(port, () => {
     `Launched server at: http://localhost:${port}\nCron jobs starting...`
   );
   start();
+});
+
+staticApp.listen(port + 1, () => {
+  console.log(`Image server running at port ${port + 1}`);
 });

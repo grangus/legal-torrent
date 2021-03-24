@@ -28,14 +28,14 @@ userRouter.get("/user/:id/avatar", async (req, res) => {
     });
   }
 
-  let avatarExists = existsSync(`../uploads/avatars/${req.params.id}`);
+  let avatarExists = existsSync(`./uploads/avatars/${req.params.id}`);
 
   if (avatarExists) {
     res
       .status(200)
       .sendFile(
-        resolve(`../uploads/avatars/${req.params.id}/${readdirSync(
-          `../uploads/avatars/${req.params.id}`
+        resolve(`./uploads/avatars/${req.params.id}/${readdirSync(
+          `./uploads/avatars/${req.params.id}`
         ).pop()}`)
       );
   } else {
@@ -53,7 +53,7 @@ userRouter.post("/user/avatar/update", async (req, res) => {
     });
 
   const diskStorage = multer.diskStorage({
-    destination: `../uploads/avatars/${req.session.user.id}`,
+    destination: `./uploads/avatars/${req.session.user.id}`,
     filename: (req, file, callback) => {
       callback(
         null,
