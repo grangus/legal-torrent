@@ -33,7 +33,7 @@ declare module "express" {
 }
 
 declare module "qs" {
-  type TimePeriod = "month" | "week" | "day";
+  type TimePeriod = "all" | "month" | "week" | "day";
 
   interface ParsedQs {
     sortBy?: string;

@@ -1,7 +1,7 @@
 import { SessionData } from "express-session";
 import ioredis, { Redis } from "ioredis";
 
-type TimePeriod = "month" | "week" | "day";
+type TimePeriod = "all" | "month" | "week" | "day";
 
 interface TopTorrent {
   id: string;

@@ -29,6 +29,14 @@ interface Hit {
   _source: TorrentSearchResult;
 }
 
+interface TopTorrent {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  category: string;
+}
+
 const torrentRouter = Router();
 const prisma = new PrismaClient();
 const redis = new RedisMethods();
@@ -55,7 +63,7 @@ torrentRouter.get("/torrents/exclusive", async (req, res) => {
   }
 });
 
-torrentRouter.get("/torrents/top/:time", async (req, res) => {
+torrentRouter.get("/torrents/top", async (req, res) => {
   const language = new Language(req.session.language || "en");
 
   try {
@@ -80,8 +88,13 @@ torrentRouter.get("/torrents/top/:time", async (req, res) => {
 
     if (!req.query.period) return;
 
-    let top = redis.getTop(req.query.period);
+    let top: TopTorrent[] = (await redis.getTop(req.query.period)).map((t: TopTorrent) => {
+      let { id, name, description, image, category } = t;
 
+      return { id, name, description, image, category };
+    });
+
+    
     res.status(200).json({
       status: "success",
       data: {
