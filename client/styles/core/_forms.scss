@@ -1,0 +1,97 @@
+.input-group{
+  .input-group-text{
+    // background-color: rgba($color-l-blue2, 0.1);
+    background-color: transparent;
+    color: $color-white;
+    // border: 1px solid rgba($color-l-blue2, 0.2);
+    border: 0;
+    border-radius: 0;
+    border-bottom: 1px solid rgba($color-l-blue2, 0.2);
+
+    .xs-icon{
+      top: -5px;
+      width: 13px;
+    }
+
+    // & + input.form-control{
+    //   padding-left: 15px;
+    // }
+  }
+
+  input.form-control{
+    background-color: transparent;
+    border: 0;
+    border-bottom: 1px;
+    border-radius: 0;
+    border-bottom: 1px solid rgba($color-l-blue2, 0.2);
+    padding: 3px 0px 10px 5px;
+    font-size: $px14;
+    outline-style: none;
+    transition: all 200ms ease;
+    color: $color-white;
+
+    &::placeholder{
+      color: $color-l-blue2;
+    }
+
+    &:focus, &:active{
+      box-shadow: none;
+      border-bottom-color: $color-l-blue2;
+    }
+  }
+}
+
+.form-floating{
+  &.w-icon{
+    label{
+      left: 36px;
+    }
+
+    .xs-icon{
+      top: 2px;
+    }
+  }
+
+  label{
+    // background-color: red;
+    padding: 15px 0px 0px 3px;
+    font-size: $px14;
+  }
+
+  input.form-control{
+    height: 50px;
+
+    &::placeholder{
+      color: transparent;
+    }
+  }
+}
+
+
+.form-switch{
+  .form-check-input{
+    background-color: $color-dark3;
+    border: 1px solid $color-border;
+    outline: none;
+    box-shadow: none;
+    width: 30px;
+    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'><circle r='3' fill='rgba(255, 255, 255, .35)'/></svg>");
+    cursor: pointer;
+
+    &[type="checkbox"]:indeterminate{
+      background-color: red;
+    }
+
+    &:focus {
+      background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'><circle r='3' fill='rgba(255, 255, 255, 1)'/></svg>");
+    }
+
+    &:checked{
+      background-color: $color-green;
+    }
+  }
+
+  .form-check-label{
+
+  }
+}

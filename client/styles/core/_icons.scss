@@ -1,0 +1,136 @@
+.xs-icon{
+  height: 13px;
+  display: inline-block;
+  width: 13px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  position: relative;
+
+  &.magnet{
+    background-image: url(#{$assets-path}/icons/magnet-dark.svg);
+    width: 12px;
+  }
+
+  &.shield{
+    background-image: url(#{$assets-path}/icons/shield-dark.svg);
+    width: 10px;
+  }
+
+  &.chart{
+    background-image: url(#{$assets-path}/icons/chart-dark.svg);
+    width: 13px;
+  }
+
+  &.bolt{
+    background-image: url(#{$assets-path}/icons/bolt-dark.svg);
+    width: 8px;
+  }
+
+  &.user{
+    background-image: url(#{$assets-path}/icons/user-dark.svg);
+    width: 12px;
+  }
+
+  &.lock{
+    background-image: url(#{$assets-path}/icons/lock-dark.svg);
+    width: 11px;
+  }
+
+  &.two-lines{
+    background-image: url(#{$assets-path}/icons/two-lines-dark.svg);
+    // width: 8px;
+  }
+
+  &.arrow-up{
+    background-image: url(#{$assets-path}/icons/arrow-up-dark.svg);
+    // width: 8px;
+  }
+
+  &.arrow-down{
+    background-image: url(#{$assets-path}/icons/arrow-up-dark.svg);
+    // width: 8px;
+    transform: scaleY(-1);
+  }
+
+  &.chat{
+    background-image: url(#{$assets-path}/icons/chat-light.svg);
+    width: 17px;
+    height: 14px;
+  }
+
+  &.bell{
+    background-image: url(#{$assets-path}/icons/bell-light.svg);
+    width: 14px;
+    height: 15px;
+  }
+}
+
+.s-icon{
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  &.search{
+    background-image: url(#{$assets-path}/icons/search-dark.svg);
+  }
+}
+
+
+.s-icon2{
+  display: inline-block;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 18px;
+  position: relative;
+
+  &.yt{
+    width: 25px;
+    background-image: url(#{$assets-path}/icons/yt-white.svg);
+  }
+
+  &.file{
+    width: 25px;
+    background-image: url(#{$assets-path}/icons/file-white.svg);
+  }
+
+  &.file-dark{
+    width: 25px;
+    background-image: url(#{$assets-path}/icons/file-dark.svg);
+  }
+
+  &.heart{
+    width: 18px;
+    background-image: url(#{$assets-path}/icons/heart-white.svg);
+  }
+
+  &.flag{
+    width: 18px;
+    background-image: url(#{$assets-path}/icons/flag-white.svg);
+  }
+}
+
+.m-icon{
+  display: inline-block;
+  height: 30px;
+  width: 30px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  &.monitor{
+    background-image: url(#{$assets-path}/icons/monitor.svg);
+  }
+
+  &.user{
+    background-image: url(#{$assets-path}/icons/user.svg);
+  }
+
+  &.shield{
+    background-image: url(#{$assets-path}/icons/shield.svg);
+  }
+}

@@ -1,0 +1,387 @@
+.torrent-list{
+
+}
+
+.search-results{
+
+}
+
+
+// Torrent List
+.torrent-list{
+  &:hover{
+    .torrent-list-item{
+      &__details{
+        div{
+          // color: lighten($color-l-blue2, 0%);
+          color: lighten($color-l-blue2, 10%);
+        }
+      }
+    }
+  }
+}
+
+.torrent-list-item{
+  display: flex;
+  position: relative;
+  padding-bottom: 10px;
+  padding-top: 10px;
+  // margin-bottom: 12px;
+  border-bottom: 1px solid $color-border;
+  overflow: hidden;
+
+  &:last-child{
+    border-bottom: 0;
+  }
+
+  &:before{
+    content: '';
+    position: absolute;
+    z-index: -1;
+    height: 100%;
+    width: 300px;
+    display: block;
+    top: 0;
+    left: -300px;
+    /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#2a2b34+0,2a2b34+50,2a2b34+99&0+10,1+50,0+90 */
+    background: -moz-linear-gradient(-45deg,  rgba(42,43,52,0) 0%, rgba(42,43,52,0) 10%, rgba(42,43,52,1) 50%, rgba(42,43,52,0) 90%, rgba(42,43,52,0) 99%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(-45deg,  rgba(42,43,52,0) 0%,rgba(42,43,52,0) 10%,rgba(42,43,52,1) 50%,rgba(42,43,52,0) 90%,rgba(42,43,52,0) 99%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(135deg,  rgba(42,43,52,0) 0%,rgba(42,43,52,0) 10%,rgba(42,43,52,1) 50%,rgba(42,43,52,0) 90%,rgba(42,43,52,0) 99%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#002a2b34', endColorstr='#002a2b34',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+    opacity: 0;
+    transition: all 500ms $cb1;
+    will-change: opacity, transform;
+  }
+
+  &:hover{
+    &:before{
+      left: 100%;
+      opacity: 0.3;
+      transition: all 500ms $cb1;
+    }
+
+    .torrent-list-item{
+      &__icon{
+        span{
+          filter: grayscale(0);
+          opacity: 1;
+        }
+      }
+
+      &__title{
+        .title{
+          color: $color-green;
+        }
+
+        .desc{
+          color: lighten($color-l-blue2, 20%);
+        }
+      }
+
+      &__details{
+        div{
+          color: $color-white;
+        }
+      }
+    }
+  }
+
+  &__link{
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+  }
+
+  &__icon{
+    display: block;
+    width: 30px;
+    display: flex;
+    align-items: center;
+    font-size: $px14;
+
+    span{
+      filter: grayscale(1);
+      opacity: 0.5;
+      transition: opacity 200ms ease-in,
+                  filter 200ms ease-in;
+    }
+  }
+
+  &__title{
+    width: calc(100% - 200px - 30px);
+    padding-right: 20px;
+
+    .title-wrapper{
+      display: flex;
+      flex-direction: row;
+
+      .vip{
+        display: inline-block;
+        position: relative;
+        top: 1px;
+        margin-left: 8px;
+        height: 16px;
+        border-radius: 5px;
+        color: #6d4306;
+        font-size: $px9;
+        font-weight: $medium;
+        padding: 0px 4px;
+        border: 1px solid #ffc600;
+        box-shadow: 0px 0px 15px rgba(#ffcc00, 0.4);
+        text-shadow: 0px 1px 0px rgba(#fffc1b, 0.8);
+        background: rgb(255,189,0);
+        background: -moz-linear-gradient(-45deg,  rgba(255,189,0,1) 1%, rgba(255,249,0,1) 100%);
+        background: -webkit-linear-gradient(-45deg,  rgba(255,189,0,1) 1%,rgba(255,249,0,1) 100%);
+        background: linear-gradient(135deg,  rgba(255,189,0,1) 1%,rgba(255,249,0,1) 100%);
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffbd00', endColorstr='#fff900',GradientType=1 );
+      }
+    }
+
+    .title{
+      display: block;
+      font-size: $px14;
+      font-weight: $medium;
+      margin-bottom: 7px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      transition: color 200ms ease;
+    }
+
+    .desc{
+      font-size: $px10;
+      color: lighten($color-l-blue2, 4%);
+      font-weight: $medium;
+      transition: color 300ms ease;
+
+      span{
+        display: inline-block;
+
+        &:after{
+          content: '-';
+          display: inline-block;
+          color: rgba($color-l-blue1, 0.4);
+          margin: 0px 8px;
+        }
+
+        &:last-child{
+          margin-right: 0;
+
+          &:after{
+            display: none;
+          }
+        }
+      }
+    }
+  }
+
+  &__details{
+    width: 200px;
+    display: flex;
+    align-items: center;
+
+    div{
+      display: inline-block;
+      width: 33.33333%;
+      text-align: center;
+      font-size: $px12;
+      font-weight: $medium;
+      transition: color 200ms ease;
+    }
+
+    .dot{
+      position: relative;
+
+      &:after{
+        content: '';
+        display: block;
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        border-radius: 100%;
+        top: 50%;
+        right: -8px;
+        transform: translate(0%, -30%);
+        background-color: rgba($color-white, 0.5);
+      }
+
+      &.red:after{
+        background-color: $color-l-red;
+      }
+
+      &.green:after{
+        background-color: $color-green;
+      }
+    }
+  }
+
+  @media (max-width: 768px){
+    &__title{
+      width: calc(100% - 140px - 30px);
+      // padding-right: 20px;
+
+      .title-wrapper{
+        .title{
+          font-size: $px12;
+        }
+      }
+    }
+
+    &__details{
+      width: 140px;
+
+      div{
+        font-size: $px10;
+
+        &:nth-child(1){
+          text-align: left;
+        }
+
+        &:nth-child(3){
+          text-align: right;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 576px){
+    &__title{
+      width: calc(100% - 30px);
+      padding-right: 0;
+    }
+
+    &__details{
+      display: none;
+    }
+  }
+
+  &--labels{
+    justify-content: space-between;
+    border-bottom: 0;
+    padding-bottom: 0;
+    padding-top: 0;
+
+    &:before{
+      display: none;
+    }
+
+    .label{
+      text-transform: uppercase;
+      font-size: $px10;
+      color: lighten($color-l-blue2, 2%);
+      font-weight: $medium;
+      letter-spacing: 0.04em;
+    }
+  }
+}
+
+
+
+// Torrent List With Cover
+
+.popular-torrents{
+  // margin-top: 120px;
+  display: block;
+  overflow: hidden;
+}
+
+.torrent-list-cover{
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  margin-bottom: 10px;
+
+  &__item{
+    display: inline-block;
+    margin-right: 10px;
+    min-width: 100px;
+    height: 150px;
+    // background-color: rgba($color-l-blue1, 0.02);
+    position: relative;
+    opacity: 0.2;
+    transition: all 200ms ease-in;
+    overflow: hidden;
+
+    a{
+      display: block;
+    }
+
+    img{
+      position: absolute;
+      width: 100%;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      filter: grayscale(0.95);
+
+      transition: all 200ms ease-in;
+    }
+
+    &:hover{
+      opacity: 1;
+
+      img{
+        filter: grayscale(0);
+      }
+    }
+  }
+
+  @media (max-width: 768px){
+    margin-bottom: 5px;
+
+    &__item{
+      height: 120px;
+      min-width: 80px;
+      margin-right: 5px;
+    }
+  }
+}
+
+.torrent-list-cover-group{
+  &.l1{
+    position: relative;
+    left: -20px;
+  }
+}
+
+.torrent-list-cover-wrapper{
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1920px;
+  position: relative;
+  overflow: hidden;
+
+  &:after, &:before{
+    content: '';
+    position: absolute;
+    z-index: 2;
+    height: 100%;
+    width: 600px;
+    top: 0;
+    left: -150px;
+    pointer-events: none;
+
+    /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#141518+0,141518+20,000000+90&1+1,1+20,0+90 */
+    background: -moz-linear-gradient(left,  rgba(20,21,24,1) 0%, rgba(20,21,24,1) 1%, rgba(20,21,24,1) 20%, rgba(0,0,0,0) 90%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(left,  rgba(20,21,24,1) 0%,rgba(20,21,24,1) 1%,rgba(20,21,24,1) 20%,rgba(0,0,0,0) 90%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to right,  rgba(20,21,24,1) 0%,rgba(20,21,24,1) 1%,rgba(20,21,24,1) 20%,rgba(0,0,0,0) 90%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#141518', endColorstr='#00000000',GradientType=1 ); /* IE6-9 */
+  }
+
+  &:before{
+    left: auto;
+    right: -150px;
+    transform: scaleX(-1);
+  }
+
+  @media (max-width: 1920px){
+    &:after, &:before{
+      display: none;
+    }
+  }
+}

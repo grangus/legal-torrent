@@ -1,4 +1,4 @@
-const port = 3000;
+const port = 3001;
 import dotenv from "dotenv";
 import express, { Request, Response, NextFunction } from "express";
 import http from "http";

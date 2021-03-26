@@ -1,0 +1,234 @@
+.color-white{color: $color-white}
+.color-black{color: $color-black}
+.color-gray{color: rgba($color-black, 0.3)}
+
+.color-green{color: $color-green;}
+.color-l-blue1{color: $color-l-blue1}
+.color-l-red{color: $color-l-red}
+
+.color-blue{color: $color-blue;}
+.color-orange{color: $color-orange;}
+.color-red{color: $color-red;}
+.color-yellow{color: $color-yellow;}
+
+
+.small-heading{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 25px;
+
+  h4{
+    color: $color-dark3;
+    text-transform: uppercase;
+    font-size: $px14;
+    font-weight: $bold;
+    letter-spacing: 0.06em;
+  }
+
+  .link-arrow{
+    margin-top: -10px;
+  }
+
+  @media (max-width: 768px){
+    margin-bottom: 15px;
+
+    h4{
+      font-size: $px12;
+      letter-spacing: 0.04em;
+    }
+  }
+}
+
+.x-small-heading{
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+
+  .sorting-wrapper{
+    top: -7px;
+  }
+
+  h5{
+    font-size: $px12;
+    font-weight: $bold;
+    text-transform: uppercase;
+    color: rgba($color-l-blue2, 0.8);
+    letter-spacing: 0.06em;
+  }
+}
+
+.content-heading{
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 20px;
+
+  h3{
+    font-size: $px18;
+    font-weight: $bold;
+
+    .desc{
+      margin: 0px 5px;
+      display: inline-block;
+      font-size: $px12;
+      font-weight: $light;
+      text-transform: uppercase;
+      color: rgba($color-l-blue2, 0.8);
+      position: relative;
+      top: 1px;
+      letter-spacing: 0.04em;
+    }
+  }
+
+  h1{
+    font-size: $px16;
+    font-weight: $medium;
+  }
+
+  &__controls{
+    display: inline-flex;
+    align-items: center;
+
+    .sorting-wrapper{
+      top: -6px;
+    }
+
+    .info-t{
+      display: inline-block;
+      margin-right: 12px;
+
+      &__item{
+        text-align: center;
+
+        .title{
+          font-size: $px16;
+        }
+      }
+    }
+
+    .button{
+      width: 39px;
+      padding: 0;
+      justify-content: center;
+      margin-left: 5px;
+      // text-align: center;
+
+      .s-icon2{
+        width: 13px;
+        height: 13px;
+        opacity: 0.4;
+        transition: all 300ms ease;
+      }
+
+      &.active{
+        .s-icon2{
+          &.heart{
+            opacity: 1;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13"><path fill-rule="evenodd" fill="rgb(255, 115, 158)" d="M13 3.84A3.84 3.84 0 009.16 0C8.13 0 7.19 1.41 6.5 2.07 5.81 1.41 4.87 0 3.84 0A3.84 3.84 0 000 3.84c0 .25.04.54.03.44C.44 8.08 5.93 13 6.5 13c.57 0 6.06-4.92 6.47-8.72 0 .1.03-.2.03-.44"/></svg>');
+          }
+        }
+      }
+
+      &:hover{
+        border-color: lighten($color-dark2, 10%);
+
+        .s-icon2{
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  @media (min-width: 768px){
+
+  }
+
+  @media (max-width: 768px){
+    margin-bottom: 10px;
+  }
+}
+
+
+.text-block-heading{
+  margin-bottom: 25px;
+
+  h3{
+    font-weight: $bold;
+    font-size: $px26;
+    line-height: $px36;
+  }
+
+  @media (max-width: 768px){
+    margin-bottom: 15px;
+
+    h3{
+      line-height: $px32;
+      font-size: $px20;
+    }
+  }
+}
+
+
+.text-content{
+  display: block;
+  line-height: $px30;
+  font-weight: $regular;
+  font-size: $px16;
+  color: lighten($color-l-blue1, 25%);
+
+  @media (max-width: 768px){
+    font-size: $px14;
+    line-height: $px28;
+  }
+}
+
+.xs-desc{
+  display: block;
+  font-size: $px10;
+  margin-top: 15px;
+  color: rgba($color-l-blue2, 0.6);
+  letter-spacing: 0.04em;
+  font-weight: $medium;
+}
+
+.xs-desc2{
+  display: block;
+  font-size: $px12;
+  margin-top: 15px;
+  color: $color-l-blue1;
+  letter-spacing: 0.04em;
+  // font-weight: $medium;
+
+  a{
+    display: inline-block;
+    color: lighten($color-l-blue1, 5%);
+    font-weight: $medium;
+    text-decoration: none;
+    transition: color 200ms ease;
+
+    &:hover{
+      // color: lighten($color-l-blue1, 15%);
+      color: $color-green;
+    }
+  }
+}
+
+
+.modal-heading{
+  text-align: center;
+
+  .title{
+    font-size: $px20;
+    margin-bottom: 0;
+    font-weight: $bold;
+  }
+
+  .desc{
+    text-transform: uppercase;
+    font-size: $px12;
+    letter-spacing: 0.04em;
+    color: $color-l-blue1;
+  }
+}

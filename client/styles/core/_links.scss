@@ -1,0 +1,100 @@
+.link-arrow{
+  text-transform: uppercase;
+  font-weight: $bold;
+  font-size: $px12;
+  letter-spacing: 0.04em;
+  display: inline-block;
+  text-decoration: none;
+  position: relative;
+  padding: 6px 0px;
+
+  &:after, &:before{
+    content: '';
+    position: absolute;
+    bottom: 0;
+    height: 2px;
+  }
+
+  &:after{
+    right: 0;
+    width: 100%;
+    background-color: rgba($color-l-blue1, 0.2);
+    transition: all 400ms $cb1;
+    transition-delay: 350ms;
+  }
+
+  &:before{
+    left: 0;
+    width: 0;
+    background-color: $color-green;
+    transition: all 400ms $cb1;
+  }
+
+  .arrow{
+    display: inline-block;
+    margin-left: 4px;
+    width: 6px;
+    height: 10px;
+    background-position: center;
+    background-size: contain;
+    background-image: url(#{$assets-path}/icons/arrow-green.svg);
+    background-repeat: no-repeat;
+    position: relative;
+    transition: all 200ms $cb1;
+    left: 0;
+  }
+
+  &:hover{
+    .arrow{
+      filter: grayscale(1);
+      opacity: 0.4;
+      transition-delay: 250ms;
+    }
+
+    &:after{
+      width: 0;
+      transition-delay: 0ms;
+    }
+
+    &:before{
+      width: 100%;
+      transition-delay: 250ms;
+    }
+  }
+
+  @media (max-width: 768px){
+    font-size: $px10;
+
+    .arrow{
+      height: 8px;
+      width: 5px;
+    }
+  }
+}
+
+
+.link-normal{
+  display: inline-block;
+  color: $color-l-blue2;
+  text-decoration: none;
+  font-size: $px10;
+  text-transform: uppercase;
+  font-weight: $medium;
+  letter-spacing: 0.04em;
+  transition: all 200ms $cb1;
+
+  &:hover{
+    color: $color-white;
+  }
+}
+
+
+.link-green{
+  text-decoration: none;
+  font-weight: $medium;
+  transition: all 300ms ease;
+
+  &:hover{
+    color: $color-green;
+  }
+}
