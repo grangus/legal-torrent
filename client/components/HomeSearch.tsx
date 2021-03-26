@@ -23,18 +23,18 @@ export default function HomeSearch() {
         </div>
         <div className="large-search">
           <div className="large-search-input">
-            <label className="large-search-input__input" for="search-input">
+            <label className="large-search-input__input" htmlFor="search-input">
               <span className="s-icon search d-none d-md-inline-block"></span>
               <input
                 type="text"
-                tabIndex="1"
+                tabIndex={1}
                 id="search-input"
                 placeholder="Movie, TV Show, Audio Book, Game, Application ..."
               />
             </label>
             <div className="large-search-input__control">
               <select className="custom-select right search-category on-white">
-                <option value="0" selected="selected" disabled>
+                <option value="0" selected={true} disabled>
                   All Categories
                 </option>
                 <option value="1">Movies & Videos</option>
@@ -47,7 +47,7 @@ export default function HomeSearch() {
 
               <button
                 className="button button--green button--large d-none d-md-inline-block"
-                tabIndex="2"
+                tabIndex={2}
               >
                 Search
               </button>

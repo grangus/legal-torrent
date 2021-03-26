@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 
-export default class NavBar extends React.Component {
+export default class NavBar extends React.Component<{}, { hidden: boolean }> {
   constructor(props) {
     super(props);
 
     this.state = {
-      hidden: true,
-    };
+      hidden: true
+    }
 
     this.toggle = this.toggle.bind(this);
   }
@@ -140,7 +140,10 @@ export default class NavBar extends React.Component {
               </ul>
             </nav>
 
-            <button className="button button--no-bg d-lg-none mobile-nav-toggle" onClick={this.toggle}>
+            <button
+              className="button button--no-bg d-lg-none mobile-nav-toggle"
+              onClick={this.toggle}
+            >
               <div className="mobile-nav-icon">
                 <span></span>
                 <span></span>
