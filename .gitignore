@@ -3,3 +3,4 @@ dist
 dump.rdb
 *.env
 prisma/migrations
+dump.rdb

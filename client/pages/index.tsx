@@ -1,4 +1,5 @@
 import Head from "next/head";
+import { useState } from "react";
 import NavBar from "../components/NavBar";
 import HomeSearch from "../components/HomeSearch";
 import PopularCategories from "../components/PopularCategories";
@@ -6,6 +7,7 @@ import HomeInfoSection from "../components/HomeInfoSection";
 import Separator from "../components/utils/Separator";
 import PopularTorrents from "../components/PopularTorrents";
 import Footer from "../components/Footer";
+import { SearchResultContainer } from "../components/search";
 
 export default function Home() {
   if (typeof window !== "undefined") {
@@ -46,17 +48,43 @@ export default function Home() {
     })();
   }
 
+  const [searchResults, setSearchResults] = useState({
+    results: [],
+    total: 0,
+  });
+
+  const handleSearchResults = (result: {
+    results: any[];
+    total: number;
+  }) => {
+    setSearchResults(result);
+  };
+
   return (
     <div className="app-wrapper">
       <NavBar />
 
-      <HomeSearch />
+      {searchResults.results.length < 1 && (
+        <div>
+          <HomeSearch setSearchResults={handleSearchResults} />
 
-      <PopularCategories />
+          <PopularCategories />
 
-      <Separator />
+          <Separator />
 
-      <HomeInfoSection />
+          <HomeInfoSection />
+        </div>
+      )}
+
+      {searchResults.results.length > 1 && (
+        <div>
+          <SearchResultContainer
+            results={searchResults.results}
+            total={searchResults.total}
+          />
+          <Separator />
+        </div>
+      )}
 
       <PopularTorrents />
 

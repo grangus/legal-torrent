@@ -245,7 +245,7 @@ torrentRouter.get("/torrents/search/:page", async (req: Request, res) => {
       status: "success",
       data: {
         pages,
-        results: result.body.hits.total.value,
+        total: result.body.hits.total.value,
         torrents: mapped,
       },
     });
