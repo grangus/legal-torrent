@@ -1,4 +1,5 @@
 import React, { ChangeEvent, FormEvent } from "react";
+import config from "../configs/site";
 
 const search = async (term: string, category: string) => {
   const categories = {
@@ -11,7 +12,12 @@ const search = async (term: string, category: string) => {
     "6": "GPS",
   };
 
-  return await (await fetch("/", { method: "GET" })).json();
+  return await (
+    await fetch(
+      `https://${config.api}/api/v1/torrents/search/0?query=${term}&category=${categories[category]}`,
+      { method: "GET" }
+    )
+  ).json();
 };
 
 export default class HomeSearch extends React.Component<
@@ -37,8 +43,8 @@ export default class HomeSearch extends React.Component<
     let result = await search(this.state.term, this.state.selection);
 
     this.props.setSearchResults({
-      results: result.torrents,
-      total: result.total,
+      results: result.data.torrents,
+      total: result.data.total,
     });
   }
 
