@@ -26,7 +26,7 @@ export default class NavBar extends React.Component<{}, { hidden: boolean }> {
   render() {
     return (
       <div>
-        <div className="modal fade" id="modal-sign-in" tabindex="-1">
+        <div className="modal fade" id="modal-sign-in" tabIndex={-1}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content narrow">
               <div className="modal-body modal-form">
@@ -94,7 +94,7 @@ export default class NavBar extends React.Component<{}, { hidden: boolean }> {
           </div>
         </div>
 
-        <div className="modal fade" id="modal-sign-up" tabindex={-1}>
+        <div className="modal fade" id="modal-sign-up" tabIndex={-1}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content narrow">
               <div className="modal-body modal-form">
