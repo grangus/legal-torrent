@@ -55,7 +55,7 @@
 
 // modal
 .modal-backdrop{
-  background-color: $color-d-dark;
+  background-color: $color-d-dark !important;
 
   &.show{
     opacity: 0.9;
@@ -63,7 +63,7 @@
   }
 }
 .modal-content{
-  background-color: $color-dark;
+  background-color: $color-dark !important;
   border: 1px solid $color-border;
   color: $color-white;
   border-radius: 15px;

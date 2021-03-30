@@ -88,13 +88,14 @@ torrentRouter.get("/torrents/top", async (req, res) => {
 
     if (!req.query.period) return;
 
-    let top: TopTorrent[] = (await redis.getTop(req.query.period)).map((t: TopTorrent) => {
-      let { id, name, description, image, category } = t;
+    let top: TopTorrent[] = (await redis.getTop(req.query.period)).map(
+      (t: TopTorrent) => {
+        let { id, name, description, image, category } = t;
 
-      return { id, name, description, image, category };
-    });
+        return { id, name, description, image, category };
+      }
+    );
 
-    
     res.status(200).json({
       status: "success",
       data: {
@@ -304,6 +305,8 @@ torrentRouter.get("/torrents/:id/download", async (req, res) => {
       },
     });
 
+    //TODO: update the torrent download count in elasticsearch
+
     let fileBuffer = Buffer.from(torrent.b64torrent, "base64");
 
     res.set("Content-Type", "application/x-bittorrent");
@@ -425,8 +428,12 @@ torrentRouter.get("/torrents/:id/info", async (req, res) => {
         OR: [{ id: req.params.id }, { elasticId: req.params.id }],
       },
       include: {
+        user: {select: {username: true, profileImage: true}},
         xbt_torrent: true,
-        comments: { take: 10 },
+        comments: {
+          take: 10,
+          include: { user: { select: { username: true, profileImage: true } } },
+        },
         favorites: true,
         downloads: true,
       },
@@ -445,18 +452,22 @@ torrentRouter.get("/torrents/:id/info", async (req, res) => {
       favorites,
       category,
       downloads,
+      image,
       negative_ratings,
       positive_ratings,
       status,
       size,
       xbt_torrent,
       name,
+      user
     } = torrent;
 
     res.status(200).json({
       status: "success",
       data: {
         torrent: {
+          image,
+          user,
           id,
           name,
           status,
