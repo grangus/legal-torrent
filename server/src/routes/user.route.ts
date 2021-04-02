@@ -14,6 +14,65 @@ const prisma = new PrismaClient();
 
 //TODO: add a notification deletion api
 
+userRouter.get("/user/:id/info", async (req, res) => {
+  const language = new Language(req.session.language || "en");
+
+  try {
+    if (!req.params.id || isNaN(parseInt(req.params.id)))
+      return res.status(403).json({
+        status: "error",
+        error: language.getTranslation("invalid_user"),
+      });
+
+    let user = await prisma.user.findFirst({
+      where: { id: parseInt(req.params.id) },
+      include: { settings: true, subscribers: true, torrents: true },
+    });
+
+    if (!user)
+      return res.status(400).json({
+        status: "error",
+        error: language.getTranslation("invalid_user"),
+      });
+
+    let {
+      username,
+      banned,
+      gender,
+      id,
+      profileImage,
+      bio,
+      location,
+      reputation,
+      subscribers,
+      torrents
+    } = user;
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        user: {
+          username,
+          banned,
+          gender,
+          id,
+          profileImage,
+          bio,
+          location,
+          reputation,
+          subscribers: subscribers.length,
+          uploads: torrents.length
+        },
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      error: language.getTranslation("internal_error"),
+    });
+  }
+});
+
 userRouter.get("/user/:id/avatar", async (req, res) => {
   const language = new Language(req.session.language || "en");
 
@@ -34,9 +93,11 @@ userRouter.get("/user/:id/avatar", async (req, res) => {
     res
       .status(200)
       .sendFile(
-        resolve(`./uploads/avatars/${req.params.id}/${readdirSync(
-          `./uploads/avatars/${req.params.id}`
-        ).pop()}`)
+        resolve(
+          `./uploads/avatars/${req.params.id}/${readdirSync(
+            `./uploads/avatars/${req.params.id}`
+          ).pop()}`
+        )
       );
   } else {
     //send default avatar?

@@ -26,6 +26,41 @@ export default class NavBar extends React.Component<{}, { hidden: boolean }> {
   render() {
     return (
       <div>
+        <div className="modal fade" id="modal-upload" tabIndex={-1}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content narrow">
+              <div className="modal-body modal-form">
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+
+                <div className="brand">
+                  <span className="brand__symbol"></span>
+                  <h2 className="brand__typo">
+                    Legal<small>torrent</small>
+                  </h2>
+                </div>
+
+                <div className="modal-heading">
+                  <h6 className="title">
+                    Upload torrent<span className="color-l-blue1">.</span>
+                  </h6>
+                  <span className="desc">Select a torrent file to upload.</span>
+                </div>
+
+                <div className="text-center">
+                  <button className="button button--medium button--border-green mt-4">
+                    Select file
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="modal fade" id="modal-sign-in" tabIndex={-1}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content narrow">
