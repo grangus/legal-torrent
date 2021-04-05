@@ -338,7 +338,8 @@ torrentRouter.post("/torrents/edit", async (req, res) => {
     let domains: Set<string> = new Set();
 
     domains.add("image.tmdb.org"); //TODO: add image serving subdomain
-
+    domains.add("images.f99.wtf");
+    
     const { error } = joi
       .object({
         id: joi.string().uuid().required(),

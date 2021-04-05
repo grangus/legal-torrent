@@ -59,6 +59,11 @@ console.log(join(__dirname, "./uploads/avatars"));
 
 staticApp.use("/avatars", express.static(join(__dirname, "./uploads/avatars")));
 
+//default avatar sending
+staticApp.get("*", (req, res) => {
+  res.sendFile(join(__dirname, "./misc/default.png"));
+});
+
 app.use(
   session({
     cookie: {
