@@ -1,5 +1,5 @@
 export default {
   scheme: "http",
-  api: "localhost:3001",
+  api: "api.f99.wtf",
   domain: "legaltorrent.com",
 };
