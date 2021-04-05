@@ -39,6 +39,7 @@ export default class NavBar extends React.Component<
     this.toggle = this.toggle.bind(this);
     this.register = this.register.bind(this);
     this.login = this.login.bind(this);
+    this.handleChange = this.handleChange.bind(this);
   }
 
   handleChange(event: ChangeEvent<HTMLInputElement>) {
@@ -341,7 +342,7 @@ export default class NavBar extends React.Component<
               </div>
             </div>
 
-            {this.state.user !== undefined && (
+            {this.state.user && (
               <ul className="mobile-user-info">
                 <li className="mobile-user-info__user">
                   <div className="logged-user-info">
@@ -393,20 +394,24 @@ export default class NavBar extends React.Component<
 
             <ul className="navbar-nav">
               <li className="navbar-nav__control">
-                <a
-                  className="button button--border-green"
-                  data-bs-toggle="modal"
-                  data-bs-target="#modal-sign-up"
-                >
-                  Sign Up
-                </a>
-                <a
-                  className="button button--border"
-                  data-bs-toggle="modal"
-                  data-bs-target="#modal-sign-in"
-                >
-                  Sign In
-                </a>
+                {!this.state.user && (
+                  <div>
+                    <a
+                      className="button button--border-green"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modal-sign-up"
+                    >
+                      Sign Up
+                    </a>
+                    <a
+                      className="button button--border"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modal-sign-in"
+                    >
+                      Sign In
+                    </a>
+                  </div>
+                )}
               </li>
               <li className="navbar-nav__item">
                 <Link href="/categories">
@@ -469,6 +474,26 @@ export default class NavBar extends React.Component<
                   </a>
                 </li>
                 <li className="navbar-nav__control">
+                  {!this.state.user && (
+                    <div>
+                      <a
+                        href=""
+                        className="button button--border"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal-sign-in"
+                      >
+                        Sign In
+                      </a>
+                      <a
+                        href=""
+                        className="button button--border-green"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal-sign-up"
+                      >
+                        Sign Up
+                      </a>
+                    </div>
+                  )}
                   {this.state.user && (
                     <div>
                       <div className="logged-user-buttons">
