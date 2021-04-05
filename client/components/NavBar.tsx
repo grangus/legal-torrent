@@ -1,4 +1,4 @@
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, FormEvent } from "react";
 import Link from "next/link";
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import config from "../configs/site";
@@ -60,9 +60,13 @@ export default class NavBar extends React.Component<
     }
   }
 
-  async register() {}
+  async register(event: FormEvent) {
+    event.preventDefault();
+  }
 
-  async login() {
+  async login(event: FormEvent) {
+    event.preventDefault();
+
     let result = await fetch(
       `${config.scheme}://${config.api}/api/v1/auth/login`,
       {
