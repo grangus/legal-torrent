@@ -40,6 +40,7 @@ export default class NavBar extends React.Component<
     this.register = this.register.bind(this);
     this.login = this.login.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.getCsrfToken = this.getCsrfToken.bind(this);
   }
 
   handleChange(event: ChangeEvent<HTMLInputElement>) {
@@ -64,8 +65,17 @@ export default class NavBar extends React.Component<
     event.preventDefault();
   }
 
+  async getCsrfToken() {
+    let result = await fetch(
+      `${config.scheme}://${config.api}/api/v1/auth/token`
+    );
+
+    return result.headers["x-csrf-token"];
+  }
+
   async login(event: FormEvent) {
     event.preventDefault();
+    let token = await this.getCsrfToken();
 
     let result = await fetch(
       `${config.scheme}://${config.api}/api/v1/auth/login`,
@@ -73,6 +83,7 @@ export default class NavBar extends React.Component<
         method: "POST",
         headers: {
           "content-type": "application/json",
+          "x-csrf-token": token,
         },
         body: JSON.stringify({
           email: this.state.loginEmail,
