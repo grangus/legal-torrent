@@ -1,24 +1,27 @@
-import React from "react";
+import React, { ChangeEvent } from "react";
 import Link from "next/link";
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import config from "../configs/site";
 
 interface UserInfo {
   username: string;
-  banned: boolean;
-  gender: string;
   id: number;
   profileImage: string;
-  bio: string;
-  location: string;
-  reputation: number;
-  subscribers: number;
-  uploads: number;
+  role: string;
+  email: string;
 }
 
 export default class NavBar extends React.Component<
-  {},
-  { hidden: boolean; user?: UserInfo }
+  { setUser?: CallableFunction },
+  {
+    hidden: boolean;
+    user?: UserInfo;
+    registrationEmail: string;
+    registrationUsername: string;
+    registrationPassword: string;
+    loginEmail: string;
+    loginPassword: string;
+  }
 > {
   constructor(props) {
     super(props);
@@ -26,9 +29,23 @@ export default class NavBar extends React.Component<
     this.state = {
       hidden: true,
       user: props.user,
+      registrationEmail: "",
+      registrationUsername: "",
+      registrationPassword: "",
+      loginEmail: "",
+      loginPassword: "",
     };
 
     this.toggle = this.toggle.bind(this);
+    this.register = this.register.bind(this);
+    this.login = this.login.bind(this);
+  }
+
+  handleChange(event: ChangeEvent<HTMLInputElement>) {
+    this.setState((s) => ({
+      ...s,
+      [event.target.name]: event.target.value,
+    }));
   }
 
   toggle() {
@@ -39,6 +56,35 @@ export default class NavBar extends React.Component<
       this.setState((state) => ({
         hidden: !state.hidden,
       }));
+    }
+  }
+
+  async register() {}
+
+  async login() {
+    let result = await fetch(
+      `${config.scheme}://${config.api}/api/v1/auth/login`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          email: this.state.loginEmail,
+          password: this.state.loginPassword,
+        }),
+      }
+    );
+
+    if (result.status !== 200)
+      return alert("Failed to register because response status was not 200");
+
+    let user: UserInfo = await result.json();
+
+    this.setState({ user: user });
+
+    if (this.props.setUser) {
+      this.props.setUser(user);
     }
   }
 
@@ -83,7 +129,7 @@ export default class NavBar extends React.Component<
         <div className="modal fade" id="modal-sign-in" tabIndex={-1}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content narrow">
-              <div className="modal-body modal-form">
+              <div className="modal-body modal-form" onSubmit={this.login}>
                 <button
                   type="button"
                   className="btn-close btn-close-white"
@@ -105,40 +151,49 @@ export default class NavBar extends React.Component<
                   <span className="desc">Sign In To Account</span>
                 </div>
 
-                <div className="form-floating w-icon input-group">
-                  <div className="input-group-text">
-                    <span className="xs-icon user"></span>
+                <form onSubmit={this.login}>
+                  <div className="form-floating w-icon input-group">
+                    <div className="input-group-text">
+                      <span className="xs-icon user"></span>
+                    </div>
+                    <input
+                      onChange={this.handleChange}
+                      value={this.state.loginEmail}
+                      type="email"
+                      className="form-control"
+                      id="input1-email"
+                      placeholder="E-Mail"
+                      name="loginEmail"
+                      autoComplete="email"
+                    />
+                    <label htmlFor="input1-email">Email Address</label>
                   </div>
-                  <input
-                    type="email"
-                    className="form-control"
-                    id="input1-email"
-                    placeholder="E-Mail"
-                    name="email"
-                    autoComplete="email"
-                  />
-                  <label htmlFor="input1-email">Email Address</label>
-                </div>
-                <div className="form-floating w-icon input-group">
-                  <div className="input-group-text">
-                    <span className="xs-icon lock"></span>
+                  <div className="form-floating w-icon input-group">
+                    <div className="input-group-text">
+                      <span className="xs-icon lock"></span>
+                    </div>
+                    <input
+                      value={this.state.loginPassword}
+                      onChange={this.handleChange}
+                      type="password"
+                      className="form-control"
+                      id="input3-password"
+                      placeholder="Password"
+                      name="loginPassword"
+                      autoComplete="password"
+                    />
+                    <label htmlFor="input3-password">Password</label>
                   </div>
-                  <input
-                    type="password"
-                    className="form-control"
-                    id="input3-password"
-                    placeholder="Password"
-                    name="password"
-                    autoComplete="password"
-                  />
-                  <label htmlFor="input3-password">Password</label>
-                </div>
 
-                <div className="text-center">
-                  <button className="button button--medium button--border-green mt-4">
-                    Sign In
-                  </button>
-                </div>
+                  <div className="text-center">
+                    <button
+                      type="submit"
+                      className="button button--medium button--border-green mt-4"
+                    >
+                      Sign In
+                    </button>
+                  </div>
+                </form>
 
                 <div className="xs-desc2 text-center">
                   <a href="">Forgot your password?</a>
@@ -173,17 +228,19 @@ export default class NavBar extends React.Component<
                   <span className="desc">Create New Account</span>
                 </div>
 
-                <form action="">
+                <form onSubmit={this.register}>
                   <div className="form-floating w-icon input-group">
                     <div className="input-group-text">
                       <span className="xs-icon user"></span>
                     </div>
                     <input
+                      onChange={this.handleChange}
+                      value={this.state.registrationEmail}
                       type="email"
                       className="form-control"
                       id="input1-email"
                       placeholder="E-Mail"
-                      name="email"
+                      name="registrationEmail"
                       autoComplete="email"
                       required
                     />
@@ -194,11 +251,13 @@ export default class NavBar extends React.Component<
                       <span className="xs-icon bolt"></span>
                     </div>
                     <input
+                      onChange={this.handleChange}
+                      value={this.state.registrationUsername}
                       type="text"
                       className="form-control"
                       id="input2-username"
                       placeholder="Username"
-                      name="username"
+                      name="registrationUsername"
                       autoComplete="username"
                       required
                     />
@@ -209,11 +268,13 @@ export default class NavBar extends React.Component<
                       <span className="xs-icon lock"></span>
                     </div>
                     <input
+                      onChange={this.handleChange}
+                      value={this.state.registrationPassword}
                       type="password"
                       className="form-control"
                       id="input3-password"
                       placeholder="Password"
-                      name="password"
+                      name="registrationPassword"
                       autoComplete="new-password"
                       required
                     />
@@ -513,9 +574,7 @@ export default class NavBar extends React.Component<
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
 ) => {
-  let result = await fetch(
-    `${config.scheme}://${config.api}/api/v1/user/me`
-  );
+  let result = await fetch(`${config.scheme}://${config.api}/api/v1/user/me`);
 
   let user: Promise<UserInfo> = await result.json();
 

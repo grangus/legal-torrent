@@ -28,8 +28,7 @@ authRouter.post("/auth/register", async (req, res) => {
         password: joi.string().min(16).required(),
         gender: joi
           .string()
-          .valid("Female", "Male", "Other", "Unspecified")
-          .required(),
+          .valid("Female", "Male", "Other", "Unspecified").default("Unspecified"),
       })
       .validate(req.body);
 
@@ -133,7 +132,7 @@ authRouter.post("/auth/login", async (req, res) => {
         error: language.getTranslation("invalid_email_or_password"),
       });
 
-    let { email, id, role, banned, ban_reason } = user;
+    let { email, id, role, banned, ban_reason, profileImage, username } = user;
 
     if (banned)
       return res.status(403).json({
@@ -151,6 +150,13 @@ authRouter.post("/auth/login", async (req, res) => {
 
     res.status(200).json({
       status: "success",
+      data: {
+        email,
+        id,
+        role,
+        profileImage,
+        username,
+      },
     });
   } catch (error) {
     console.log(error);
