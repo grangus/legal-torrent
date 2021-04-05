@@ -91,6 +91,7 @@ app.use((req, res, next) => {
     "Access-Control-Allow-Origin",
     "https://legal-torrent.vercel.app"
   );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   next();
 });
 app.use(routes);
