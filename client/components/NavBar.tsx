@@ -1,12 +1,31 @@
 import React from "react";
 import Link from "next/link";
+import { GetServerSideProps, GetServerSidePropsContext } from "next";
+import config from "../configs/site";
 
-export default class NavBar extends React.Component<{}, { hidden: boolean }> {
+interface UserInfo {
+  username: string;
+  banned: boolean;
+  gender: string;
+  id: number;
+  profileImage: string;
+  bio: string;
+  location: string;
+  reputation: number;
+  subscribers: number;
+  uploads: number;
+}
+
+export default class NavBar extends React.Component<
+  {},
+  { hidden: boolean; user?: UserInfo }
+> {
   constructor(props) {
     super(props);
 
     this.state = {
       hidden: true,
+      user: props.user,
     };
 
     this.toggle = this.toggle.bind(this);
@@ -261,6 +280,56 @@ export default class NavBar extends React.Component<{}, { hidden: boolean }> {
               </div>
             </div>
 
+            {this.state.user !== undefined && (
+              <ul className="mobile-user-info">
+                <li className="mobile-user-info__user">
+                  <div className="logged-user-info">
+                    <span className="desc">Logged as</span>
+                    <span className="title text-truncate">
+                      {this.state.user.username}
+                    </span>
+                  </div>
+                  <div className="logged-user-buttons">
+                    <a href="" className="button button--border">
+                      <div>
+                        <span className="xs-icon chat"></span>
+                      </div>
+                    </a>
+                    <a href="" className="button button--border dot">
+                      <div>
+                        <span className="xs-icon bell"></span>
+                      </div>
+                    </a>
+                  </div>
+                </li>
+                <li>
+                  <a className="color-green" href="#">
+                    Upload Torrent
+                  </a>
+                </li>
+                <li>
+                  <a className="" href="#">
+                    Your Uploads
+                  </a>
+                </li>
+                <li>
+                  <a className="" href="#">
+                    Liked Torrents
+                  </a>
+                </li>
+                <li>
+                  <a className="" href="#">
+                    Settings
+                  </a>
+                </li>
+                <li>
+                  <a className="color-gray" href="#">
+                    Logout
+                  </a>
+                </li>
+              </ul>
+            )}
+
             <ul className="navbar-nav">
               <li className="navbar-nav__control">
                 <a
@@ -339,20 +408,80 @@ export default class NavBar extends React.Component<{}, { hidden: boolean }> {
                   </a>
                 </li>
                 <li className="navbar-nav__control">
-                  <a
-                    className="button button--border"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modal-sign-in"
-                  >
-                    Sign In
-                  </a>
-                  <a
-                    className="button button--border-green"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modal-sign-up"
-                  >
-                    Sign Up
-                  </a>
+                  {this.state.user && (
+                    <div>
+                      <div className="logged-user-buttons">
+                        <a href="" className="button button--border dot">
+                          <div>
+                            <span className="xs-icon chat"></span>
+                          </div>
+                        </a>
+                        <a href="" className="button button--border">
+                          <div>
+                            <span className="xs-icon bell"></span>
+                          </div>
+                        </a>
+                      </div>
+
+                      <div className="dropdown">
+                        <button
+                          type="button"
+                          className="profile-details"
+                          data-bs-toggle="dropdown"
+                        >
+                          <div className="profile-details__stats">
+                            <div>
+                              <span className="xs-icon arrow-up"></span> 150
+                            </div>
+                            <div>
+                              <span className="xs-icon arrow-down"></span> 42
+                            </div>
+                            <div>
+                              <span className="xs-icon two-lines"></span> 3,75
+                            </div>
+                          </div>
+                          <div className="profile-details__av">
+                            <img src="src/assets/images/demo-av/2.png" alt="" />
+                          </div>
+                        </button>
+                        <ul className="dropdown-menu">
+                          <li>
+                            <div className="logged-user-info">
+                              <span className="desc">Logged as</span>
+                              <span className="title text-truncate">
+                                Brosky96
+                              </span>
+                            </div>
+                          </li>
+                          <li>
+                            <a className="dropdown-item color-green" href="#">
+                              Upload Torrent
+                            </a>
+                          </li>
+                          <li>
+                            <a className="dropdown-item" href="#">
+                              Your Uploads
+                            </a>
+                          </li>
+                          <li>
+                            <a className="dropdown-item" href="#">
+                              Liked Torrents
+                            </a>
+                          </li>
+                          <li>
+                            <a className="dropdown-item" href="#">
+                              Settings
+                            </a>
+                          </li>
+                          <li>
+                            <a className="dropdown-item color-gray" href="#">
+                              Logout
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
                 </li>
               </ul>
             </nav>
@@ -380,3 +509,19 @@ export default class NavBar extends React.Component<{}, { hidden: boolean }> {
     );
   }
 }
+
+export const getServerSideProps: GetServerSideProps = async (
+  context: GetServerSidePropsContext
+) => {
+  let result = await fetch(
+    `${config.scheme}://${config.api}/api/v1/user/me`
+  );
+
+  let user: Promise<UserInfo> = await result.json();
+
+  return {
+    props: {
+      user,
+    },
+  };
+};
