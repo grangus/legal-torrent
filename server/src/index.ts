@@ -87,7 +87,7 @@ app.use((req: Request, res, next) => {
 app.use(
   cors({
     allowedHeaders: ["content-type"],
-    origin: "https://legal-torrent.vercel.app/",
+    origin: "https://legal-torrent.vercel.app",
   })
 );
 
