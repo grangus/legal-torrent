@@ -56,7 +56,7 @@ model Torrent {
   status           TorrentStatus   @default(UNCONFIRMED)
   positive_ratings Int             @default(0)
   negative_ratings Int             @default(0)
-  image            String          @default("https://pobocha.pl/dist/torrent/src/assets/images/default-cover.png")
+  image            String          @default("https://images.f99.wtf/avatars/default.png")
   size             String
   download_count   Int             @default(0)
   exclusive        Boolean         @default(false)
