@@ -9,7 +9,7 @@ import ioredis from "ioredis";
 import csurf from "csurf";
 import { device } from "./middlewares/device";
 import WebSocket, { Ws } from "ws";
-import {join} from "path";
+import { join } from "path";
 import Socket from "./misc/socket";
 import start from "./misc/cronjobs";
 
@@ -86,6 +86,13 @@ app.use((req: Request, res, next) => {
 app.use(device);
 app.use(csurf());
 app.use(express.json());
+app.use((req, res, next) => {
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "https://legal-torrent.vercel.app"
+  );
+  next();
+});
 app.use(routes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
