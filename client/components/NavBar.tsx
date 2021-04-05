@@ -79,7 +79,7 @@ export default class NavBar extends React.Component<
     if (result.status !== 200)
       return alert("Failed to register because response status was not 200");
 
-    let user: UserInfo = await result.json();
+    let user: UserInfo = (await result.json()).data;
 
     this.setState({ user: user });
 
