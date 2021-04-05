@@ -70,8 +70,7 @@ export default class NavBar extends React.Component<
       `${config.scheme}://${config.api}/api/v1/auth/token`
     );
 
-    console.log(result.headers)
-    return result.headers["x-csrf-token"];
+    return result.headers.get("x-csrf-token");
   }
 
   async login(event: FormEvent) {
