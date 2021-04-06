@@ -616,7 +616,9 @@ export default class NavBar extends React.Component<
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
 ) => {
-  let result = await fetch(`${config.scheme}://${config.api}/api/v1/user/me`);
+  let result = await fetch(`${config.scheme}://${config.api}/api/v1/user/me`, {
+    credentials: "include",
+  });
 
   let user: Promise<UserInfo> = await result.json();
 
