@@ -69,7 +69,8 @@ export default class NavBar extends React.Component<
 
   async getCsrfToken() {
     let result = await fetch(
-      `${config.scheme}://${config.api}/api/v1/auth/token`
+      `${config.scheme}://${config.api}/api/v1/auth/token`,
+      { credentials: "include" }
     );
 
     return result.headers.get("x-csrf-token");
@@ -618,7 +619,8 @@ export const getServerSideProps: GetServerSideProps = async (
 ) => {
   let result = await fetch(`${config.scheme}://${config.api}/api/v1/user/me`);
   let tokenResult = await fetch(
-    `${config.scheme}://${config.api}/api/v1/auth/token`
+    `${config.scheme}://${config.api}/api/v1/auth/token`,
+    { credentials: "include" }
   );
 
   let user: Promise<UserInfo> = await result.json();
