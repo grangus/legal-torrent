@@ -21,7 +21,6 @@ export default class NavBar extends React.Component<
     registrationPassword: string;
     loginEmail: string;
     loginPassword: string;
-    csrfToken: string;
   }
 > {
   constructor(props) {
@@ -35,7 +34,6 @@ export default class NavBar extends React.Component<
       registrationPassword: "",
       loginEmail: "",
       loginPassword: "",
-      csrfToken: props.csrfToken,
     };
 
     this.toggle = this.toggle.bind(this);
@@ -78,6 +76,7 @@ export default class NavBar extends React.Component<
 
   async login(event: FormEvent) {
     event.preventDefault();
+    let token = await this.getCsrfToken();
 
     let result = await fetch(
       `${config.scheme}://${config.api}/api/v1/auth/login`,
@@ -86,7 +85,7 @@ export default class NavBar extends React.Component<
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-csrf-token": this.state.csrfToken,
+          "x-csrf-token": token,
         },
         body: JSON.stringify({
           email: this.state.loginEmail,
@@ -617,22 +616,13 @@ export default class NavBar extends React.Component<
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
 ) => {
-  let result = await fetch(`${config.scheme}://${config.api}/api/v1/user/me`, {
-    credentials: "include",
-  });
-  
-  let tokenResult = await fetch(
-    `${config.scheme}://${config.api}/api/v1/auth/token`,
-    { credentials: "include" }
-  );
+  let result = await fetch(`${config.scheme}://${config.api}/api/v1/user/me`);
 
   let user: Promise<UserInfo> = await result.json();
-  let csrfToken = tokenResult.headers.get("x-csrf-token");
 
   return {
     props: {
       user,
-      csrfToken,
     },
   };
 };
