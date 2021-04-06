@@ -80,6 +80,7 @@ export default class NavBar extends React.Component<
     let result = await fetch(
       `${config.scheme}://${config.api}/api/v1/auth/login`,
       {
+        credentials: "include",
         method: "POST",
         headers: {
           "content-type": "application/json",
