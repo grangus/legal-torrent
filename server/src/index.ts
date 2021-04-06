@@ -72,7 +72,7 @@ app.use(
     },
     secret: "TEMPORARY_SECRET",
     name: "LTSID", //Legal Torrent Session ID
-    resave: false, //avoid saving if nothing was modified
+    resave: true, //avoid saving if nothing was modified
     store: new Store({ client: redis }),
     saveUninitialized: false,
   })

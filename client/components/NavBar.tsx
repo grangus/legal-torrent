@@ -177,7 +177,7 @@ export default class NavBar extends React.Component<
                       value={this.state.loginEmail}
                       type="email"
                       className="form-control"
-                      id="input1-email"
+                      id="login-email"
                       placeholder="E-Mail"
                       name="loginEmail"
                       autoComplete="email"
@@ -193,7 +193,7 @@ export default class NavBar extends React.Component<
                       onChange={this.handleChange}
                       type="password"
                       className="form-control"
-                      id="input3-password"
+                      id="login-password"
                       placeholder="Password"
                       name="loginPassword"
                       autoComplete="password"
@@ -254,7 +254,7 @@ export default class NavBar extends React.Component<
                       value={this.state.registrationEmail}
                       type="email"
                       className="form-control"
-                      id="input1-email"
+                      id="registration-email"
                       placeholder="E-Mail"
                       name="registrationEmail"
                       autoComplete="email"
@@ -288,7 +288,7 @@ export default class NavBar extends React.Component<
                       value={this.state.registrationPassword}
                       type="password"
                       className="form-control"
-                      id="input3-password"
+                      id="registration-password"
                       placeholder="Password"
                       name="registrationPassword"
                       autoComplete="new-password"
