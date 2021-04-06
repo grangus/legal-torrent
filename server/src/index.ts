@@ -67,8 +67,9 @@ staticApp.get("*", (req, res) => {
 
 app.use(
   session({
+    rolling: true,
     cookie: {
-      domain: ".f99.wtf",
+      domain: "f99.wtf",
       secure: true, //this should be set to "true" in production - only have it turned off because i dont have tls enabled
     },
     secret: "TEMPORARY_SECRET",
