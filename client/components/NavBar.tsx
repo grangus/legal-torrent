@@ -45,7 +45,7 @@ export default class NavBar extends React.Component<
   }
 
   handleChange(event: ChangeEvent<HTMLInputElement>) {
-    console.log(props)
+    console.log(this.props)
     this.setState((s) => ({
       ...s,
       [event.target.name]: event.target.value,
