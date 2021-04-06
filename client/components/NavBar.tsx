@@ -12,7 +12,7 @@ interface UserInfo {
 }
 
 export default class NavBar extends React.Component<
-  { setUser?: CallableFunction },
+  { setUser?: CallableFunction; user?: UserInfo },
   {
     hidden: boolean;
     user?: UserInfo;
