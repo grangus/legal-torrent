@@ -68,7 +68,8 @@ staticApp.get("*", (req, res) => {
 app.use(
   session({
     cookie: {
-      secure: false, //this should be set to "true" in production - only have it turned off because i dont have tls enabled
+      domain: "legal-torrent.vercel.app",
+      secure: true, //this should be set to "true" in production - only have it turned off because i dont have tls enabled
     },
     secret: "TEMPORARY_SECRET",
     name: "LTSID", //Legal Torrent Session ID
