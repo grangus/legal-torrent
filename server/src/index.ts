@@ -65,7 +65,7 @@ staticApp.get("*", (req, res) => {
   res.sendFile(join(__dirname, "./misc/default.png"));
 });
 
-app.use(
+app.use("/",
   session({
     rolling: true,
     cookie: {
