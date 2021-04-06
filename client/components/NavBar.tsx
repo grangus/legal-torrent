@@ -36,7 +36,7 @@ export default class NavBar extends React.Component<
       loginPassword: "",
     };
 
-    console.log(props)
+    
     this.toggle = this.toggle.bind(this);
     this.register = this.register.bind(this);
     this.login = this.login.bind(this);
@@ -45,6 +45,7 @@ export default class NavBar extends React.Component<
   }
 
   handleChange(event: ChangeEvent<HTMLInputElement>) {
+    console.log(props)
     this.setState((s) => ({
       ...s,
       [event.target.name]: event.target.value,
