@@ -65,13 +65,13 @@ staticApp.get("*", (req, res) => {
   res.sendFile(join(__dirname, "./misc/default.png"));
 });
 
-app.set('trust proxy', 1)
+app.enable('trust proxy');
 
-app.use("/",
+app.use(
+  "/",
   session({
     rolling: true,
     cookie: {
-      domain: "f99.wtf",
       secure: true, //this should be set to "true" in production - only have it turned off because i dont have tls enabled
     },
     secret: "TEMPORARY_SECRET",
@@ -93,7 +93,7 @@ app.use(
     allowedHeaders: ["content-type", "x-csrf-token"],
     origin: "https://lt.f99.wtf",
     exposedHeaders: ["x-csrf-token"],
-    credentials: true
+    credentials: true,
   })
 );
 
@@ -101,9 +101,9 @@ app.use(device);
 app.use(csurf());
 app.use(express.json());
 
-app.use((req, res,next) => {
-  console.log(res.getHeaders())
-  next()
+app.use((req, res, next) => {
+  console.log(res.getHeaders());
+  next();
 });
 app.use(routes);
 
