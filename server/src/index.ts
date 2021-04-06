@@ -99,6 +99,10 @@ app.use(device);
 app.use(csurf());
 app.use(express.json());
 
+app.use((req, res,next) => {
+  console.log(res.getHeaders())
+  next()
+});
 app.use(routes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
