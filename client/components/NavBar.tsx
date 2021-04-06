@@ -620,8 +620,9 @@ export const getServerSideProps: GetServerSideProps = async (
     credentials: "include",
   });
 
+  console.log(result.status);
   let user: Promise<UserInfo> = await result.json();
-
+  console.log(user);
   return {
     props: {
       user,
