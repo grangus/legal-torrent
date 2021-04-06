@@ -36,6 +36,7 @@ export default class NavBar extends React.Component<
       loginPassword: "",
     };
 
+    console.log(props)
     this.toggle = this.toggle.bind(this);
     this.register = this.register.bind(this);
     this.login = this.login.bind(this);
