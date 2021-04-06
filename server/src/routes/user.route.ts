@@ -178,6 +178,7 @@ userRouter.get("/user/lang/set/:code", async (req, res) => {
 });
 
 userRouter.get("/user/me", async (req, res) => {
+  console.log(req.headers)
   const language = new Language(req.session.language || "en");
 
   try {

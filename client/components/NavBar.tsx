@@ -45,7 +45,7 @@ export default class NavBar extends React.Component<
   }
 
   handleChange(event: ChangeEvent<HTMLInputElement>) {
-    console.log(this.props)
+    console.log(Object.keys(this.props))
     console.log(this.props.user)
     console.log(this.state.user)
     this.setState((s) => ({
