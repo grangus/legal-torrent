@@ -49,17 +49,14 @@ export default class NavBar extends React.Component<
       credentials: "include",
     });
   
-    let user: UserInfo = await result.json();
-    console.log(user);
+    let user: UserInfo = (await result.json()).data.user;
+    
     this.setState(s => ({
       user: user
     }))
   }
 
   handleChange(event: ChangeEvent<HTMLInputElement>) {
-    console.log(Object.keys(this.props))
-    console.log(this.props.user)
-    console.log(this.state.user)
     this.setState((s) => ({
       ...s,
       [event.target.name]: event.target.value,
