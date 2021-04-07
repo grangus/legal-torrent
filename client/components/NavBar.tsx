@@ -125,7 +125,6 @@ export default class NavBar extends React.Component<
   render() {
     return (
       <div>
-        <h1>{JSON.stringify(this.state.user)}</h1>
         <div className="modal fade" id="modal-upload" tabIndex={-1}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content narrow">
