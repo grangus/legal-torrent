@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent } from "react";
+import React, { ChangeEvent, FormEvent, } from "react";
 import Link from "next/link";
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import config from "../configs/site";
@@ -42,6 +42,18 @@ export default class NavBar extends React.Component<
     this.login = this.login.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.getCsrfToken = this.getCsrfToken.bind(this);
+  }
+
+  async componentDidMount() {
+    let result = await fetch(`${config.scheme}://${config.api}/api/v1/user/me`, {
+      credentials: "include",
+    });
+  
+    let user: UserInfo = await result.json();
+    console.log(user);
+    this.setState(s => ({
+      user: user
+    }))
   }
 
   handleChange(event: ChangeEvent<HTMLInputElement>) {
@@ -617,20 +629,3 @@ export default class NavBar extends React.Component<
     );
   }
 }
-
-export const getServerSideProps: GetServerSideProps = async (
-  context: GetServerSidePropsContext
-) => {
-  let result = await fetch(`${config.scheme}://${config.api}/api/v1/user/me`, {
-    credentials: "include",
-  });
-
-  console.log(result.status);
-  let user: Promise<UserInfo> = await result.json();
-  console.log(user);
-  return {
-    props: {
-      user,
-    },
-  };
-};
