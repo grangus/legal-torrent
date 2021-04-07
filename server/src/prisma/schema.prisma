@@ -17,7 +17,7 @@ model User {
   username      String            @unique
   password      String
   bio           String            @default("Hey there! I'm using WhatsApp!")
-  profileImage  String            @default("https://pobocha.pl/dist/torrent/src/assets/images/demo-av/2.png")
+  profileImage  String            @default("https://images.f99.wtf/avatars/default.png")
   location      String            @default("The Moon")
   role          Role              @default(USER)
   gender        Gender            @default(Unspecified)
