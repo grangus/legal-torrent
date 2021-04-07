@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent, } from "react";
+import React, { ChangeEvent, FormEvent } from "react";
 import Link from "next/link";
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import config from "../configs/site";
@@ -36,7 +36,6 @@ export default class NavBar extends React.Component<
       loginPassword: "",
     };
 
-    
     this.toggle = this.toggle.bind(this);
     this.register = this.register.bind(this);
     this.login = this.login.bind(this);
@@ -45,15 +44,18 @@ export default class NavBar extends React.Component<
   }
 
   async componentDidMount() {
-    let result = await fetch(`${config.scheme}://${config.api}/api/v1/user/me`, {
-      credentials: "include",
-    });
-  
+    let result = await fetch(
+      `${config.scheme}://${config.api}/api/v1/user/me`,
+      {
+        credentials: "include",
+      }
+    );
+
     let user: UserInfo = (await result.json()).data.user;
-    
-    this.setState(s => ({
-      user: user
-    }))
+
+    this.setState((s) => ({
+      user: user,
+    }));
   }
 
   handleChange(event: ChangeEvent<HTMLInputElement>) {
@@ -76,6 +78,35 @@ export default class NavBar extends React.Component<
 
   async register(event: FormEvent) {
     event.preventDefault();
+    let token = await this.getCsrfToken();
+
+    let result = await fetch(
+      `${config.scheme}://${config.api}/api/v1/auth/register`,
+      {
+        credentials: "include",
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-csrf-token": token,
+        },
+        body: JSON.stringify({
+          email: this.state.registrationEmail,
+          username: this.state.registrationUsername,
+          password: this.state.registrationPassword,
+        }),
+      }
+    );
+
+    if (result.status !== 200)
+      return alert("Failed to register because response status was not 200");
+
+    let user: UserInfo = (await result.json()).data;
+
+    this.setState({ user: user });
+
+    if (this.props.setUser) {
+      this.props.setUser(user);
+    }
   }
 
   async getCsrfToken() {
@@ -108,7 +139,7 @@ export default class NavBar extends React.Component<
     );
 
     if (result.status !== 200)
-      return alert("Failed to register because response status was not 200");
+      return alert("Failed to login because response status was not 200");
 
     let user: UserInfo = (await result.json()).data;
 

@@ -28,7 +28,8 @@ authRouter.post("/auth/register", async (req, res) => {
         password: joi.string().min(16).required(),
         gender: joi
           .string()
-          .valid("Female", "Male", "Other", "Unspecified").default("Unspecified"),
+          .valid("Female", "Male", "Other", "Unspecified")
+          .default("Unspecified"),
       })
       .validate(req.body);
 
@@ -72,7 +73,7 @@ authRouter.post("/auth/register", async (req, res) => {
       },
     });
 
-    let { email, id, role } = user;
+    let { email, id, role, profileImage, username } = user;
 
     req.session.user = {
       email,
@@ -84,6 +85,13 @@ authRouter.post("/auth/register", async (req, res) => {
 
     res.status(200).json({
       status: "success",
+      data: {
+        email,
+        id,
+        role,
+        profileImage,
+        username,
+      },
     });
   } catch (error) {
     console.log(error);
