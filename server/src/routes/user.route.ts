@@ -45,7 +45,7 @@ userRouter.get("/user/:id/info", async (req, res) => {
       location,
       reputation,
       subscribers,
-      torrents
+      torrents,
     } = user;
 
     res.status(200).json({
@@ -61,7 +61,7 @@ userRouter.get("/user/:id/info", async (req, res) => {
           location,
           reputation,
           subscribers: subscribers.length,
-          uploads: torrents.length
+          uploads: torrents.length,
         },
       },
     });
@@ -178,7 +178,7 @@ userRouter.get("/user/lang/set/:code", async (req, res) => {
 });
 
 userRouter.get("/user/me", async (req, res) => {
-  console.log(req.headers)
+  console.log(req.headers);
   const language = new Language(req.session.language || "en");
 
   try {
@@ -199,12 +199,12 @@ userRouter.get("/user/me", async (req, res) => {
         error: language.getTranslation("unauthorized"),
       });
 
-    let { email, banned, gender, id, role, settings } = user;
+    let { email, banned, gender, id, role, settings, profileImage } = user;
 
     res.status(200).json({
       status: "success",
       data: {
-        user: { email, banned, gender, id, role, settings },
+        user: { email, banned, gender, id, role, settings, profileImage },
       },
     });
   } catch (error) {
