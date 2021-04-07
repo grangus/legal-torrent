@@ -560,7 +560,7 @@ export default class NavBar extends React.Component<
                             </div>
                           </div>
                           <div className="profile-details__av">
-                            <img src="src/assets/images/demo-av/2.png" alt="" />
+                            <img src={this.state.user.profileImage} alt="" />
                           </div>
                         </button>
                         <ul className="dropdown-menu">
@@ -568,7 +568,7 @@ export default class NavBar extends React.Component<
                             <div className="logged-user-info">
                               <span className="desc">Logged as</span>
                               <span className="title text-truncate">
-                                Brosky96
+                                {this.state.user.username}
                               </span>
                             </div>
                           </li>
